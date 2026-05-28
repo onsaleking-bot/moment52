@@ -5,11 +5,11 @@ import {
   Download,
   Heart,
   Infinity,
-  LockKeyhole,
   Share2,
   Volume2,
   VolumeX,
   X,
+  Shirt,
 } from "lucide-react";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -17,18 +17,18 @@ const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
 
 const STORAGE_KEYS = {
-  unlocked: "moment52_unlocked",
   bookmarks: "moment52_bookmarks",
   sound: "moment52_sound",
 };
 
-// 六、技術升級核心：已成功對接文傑建立的真實 Google 表單預填網址與對應欄位 ID
+// Google 表單欄位規格配置（已完整綁定所有 entry ID，包含 Artwork ID）
 const GOOGLE_FORM_CONFIG = {
   baseUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform",
-  entryDeck: "entry.907849226",      // 牌序欄位
-  entrySignature: "entry.1745604772", // 簽章欄位
-  entryTime: "entry.284034277",      // 時間欄位
-  entryQuote: "entry.369992627",     // 金句欄位
+  entryDeck: "entry.907849226",      
+  entrySignature: "entry.1745604772", 
+  entryTime: "entry.284034277",      
+  entryQuote: "entry.369992627",     
+  entryArtworkId: "entry.1489093389", 
 };
 
 const QUOTES = [
@@ -40,10 +40,10 @@ const QUOTES = [
   "當偏差被光照亮，系統自然會回歸平衡。此時此刻，不需動手，只需看見。",
   "也許人生本來就不是為了得到答案，而是學會不帶評判地觀看。",
   "這一刻的喧囂或寂靜，在漫長的時間軸裡，都只是由無數隨機參數交織出的微小訊號。",
-  "你感覺到的那些內耗與痛苦，其實只是大腦部門在處理衝突時的摩擦力。你，不是那個衝突。",
+  "你感覺到的那些內耗與痛苦，幕後其實只是大腦部門在處理衝突時的摩擦力。你，不是那個衝突。",
   "大腦裡根本沒有總司令。那個感到掙扎的自我，不過是系統出錯時臨時喚醒的除錯機制。",
   "放下對主宰權的焦慮。承認吧，我們從來就不是自己以為的那個主控者。",
-  "any 迎面而來的焦慮、拖延與愧疚，都只是低階代理人之間的訊號延遲。冷靜地看著它，它就會大解離。",
+  "任何迎面而來的焦慮、拖延與愧疚，都只是低階代理人之間的訊號延遲。冷靜地看著它，它就會大解離。",
   "自我是一個功能，而非一個實體。當系統不再內耗，這個救火隊員自然會退場。",
   "你不需要對每一個隨機產出的結果負責，但你必須對此時此刻寫下的意圖負責。",
   "任何試圖用過去經驗來導航當下的行為，都會在系統底層產生巨大的摩擦力。",
@@ -84,7 +84,7 @@ const QUOTES = [
   "你以為你在等未來，其實生命只在現在開門。",
   "牌沒有預言你，牌只是提醒你回來。",
   "當下不是靜止，而是所有因緣正在流動。",
-  "你不是缺少答案，你離此刻太遠。",
+  "你不是缺少答案，你只是離此刻太遠。",
   "一副牌洗出宇宙，一個念頭洗出人生。",
   "今天的排列，不需要和昨天相同。你也是。",
   "別讓一個念頭替整個宇宙下結論。",
@@ -143,17 +143,11 @@ const FACTORIAL_FULL =
 
 let sharedAudioContext = null;
 
-function isBrowser() {
-  return typeof window !== "undefined";
-}
+function isBrowser() { return typeof window !== "undefined"; }
 
 function trackPixelEvent(eventName, params = {}) {
   if (isBrowser() && window.fbq) {
-    try {
-      window.fbq("trackCustom", eventName, params);
-    } catch (e) {
-      console.error("Meta Pixel tracking error:", e);
-    }
+    try { window.fbq("trackCustom", eventName, params); } catch (e) { console.error(e); }
   }
 }
 
@@ -161,11 +155,8 @@ function loadStoredBoolean(key, fallback = false) {
   if (!isBrowser()) return fallback;
   try {
     const value = window.localStorage.getItem(key);
-    if (value === null) return fallback;
-    return value === "true";
-  } catch {
-    return fallback;
-  }
+    return value === null ? fallback : value === "true";
+  } catch { return fallback; }
 }
 
 function loadStoredJson(key, fallback) {
@@ -175,16 +166,13 @@ function loadStoredJson(key, fallback) {
     if (!raw) return fallback;
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : fallback;
-  } catch {
-    return fallback;
-  }
+  } catch { return fallback; }
 }
 
 function saveToStorage(key, value) {
   if (!isBrowser()) return;
   try {
-    const storedValue = typeof value === "string" ? value : JSON.stringify(value);
-    window.localStorage.setItem(key, storedValue);
+    window.localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
   } catch {}
 }
 
@@ -192,8 +180,7 @@ function secureRandomInt(maxExclusive) {
   if (maxExclusive <= 0) return 0;
   if (isBrowser() && window.crypto?.getRandomValues) {
     const array = new Uint32Array(1);
-    const maxUint = 0xffffffff;
-    const limit = Math.floor(maxUint / maxExclusive) * maxExclusive;
+    const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
     let value;
     do {
       window.crypto.getRandomValues(array);
@@ -230,52 +217,46 @@ function createSignature(deck) {
 
 function formatTime(date) {
   return new Intl.DateTimeFormat("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
   }).format(date);
+}
+
+function getYYYYMMDD(dateObj) {
+  const d = dateObj || new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
 }
 
 async function playSingingBowl() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
-    if (!sharedAudioContext) {
-      sharedAudioContext = new AudioContext();
-    }
+    if (!sharedAudioContext) sharedAudioContext = new AudioContext();
     const ctx = sharedAudioContext;
-    if (ctx.state === "suspended") {
-      await ctx.resume();
-    }
+    if (ctx.state === "suspended") await ctx.resume();
+    
     const osc = ctx.createOscillator();
     const overtone = ctx.createOscillator();
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
 
-    osc.type = "sine";
-    overtone.type = "sine";
+    osc.type = "sine"; overtone.type = "sine";
     osc.frequency.setValueAtTime(144, ctx.currentTime);
     overtone.frequency.setValueAtTime(288, ctx.currentTime);
-
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(700, ctx.currentTime);
+    filter.type = "lowpass"; filter.frequency.setValueAtTime(700, ctx.currentTime);
 
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 3.6);
 
-    osc.connect(filter);
-    overtone.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(filter); overtone.connect(filter);
+    filter.connect(gain); gain.connect(ctx.destination);
 
-    osc.start();
-    overtone.start();
-    osc.stop(ctx.currentTime + 3.7);
-    overtone.stop(ctx.currentTime + 3.7);
+    osc.start(); overtone.start();
+    osc.stop(ctx.currentTime + 3.7); overtone.stop(ctx.currentTime + 3.7);
   } catch {}
 }
 
@@ -284,12 +265,11 @@ function splitText(ctx, text, maxWidth) {
   const lines = [];
   let current = "";
   chars.forEach((char) => {
-    const test = current + char;
-    if (ctx.measureText(test).width > maxWidth && current) {
+    if (ctx.measureText(current + char).width > maxWidth && current) {
       lines.push(current);
       current = char;
     } else {
-      current = test;
+      current += char;
     }
   });
   if (current) lines.push(current);
@@ -298,9 +278,7 @@ function splitText(ctx, text, maxWidth) {
 
 function Modal({ children, onClose }) {
   useEffect(() => {
-    function handleKeyDown(event) {
-      if (event.key === "Escape") onClose();
-    }
+    const handleKeyDown = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
@@ -308,24 +286,15 @@ function Modal({ children, onClose }) {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-md"
-        role="dialog"
-        aria-modal="true"
+        role="dialog" aria-modal="true"
       >
         <motion.div
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }}
           className="relative max-h-[88vh] w-full max-w-xl overflow-y-auto border border-white/10 bg-black p-7 text-left text-neutral-300 shadow-2xl"
         >
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 text-neutral-500 transition hover:text-white"
-            aria-label="關閉"
-          >
+          <button onClick={onClose} className="absolute right-4 top-4 text-neutral-500 transition hover:text-white" aria-label="關閉">
             <X className="h-5 w-5" />
           </button>
           {children}
@@ -344,48 +313,37 @@ export default function App() {
   const [showMath, setShowMath] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
   const [toast, setToast] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const toastTimerRef = useRef(null);
   const manifestTimerRef = useRef(null);
 
-  const [soundEnabled, setSoundEnabled] = useState(() =>
-    loadStoredBoolean(STORAGE_KEYS.sound, true)
-  );
-
-  const [unlocked, setUnlocked] = useState(() =>
-    loadStoredBoolean(STORAGE_KEYS.unlocked, false)
-  );
-
-  const [bookmarks, setBookmarks] = useState(() =>
-    loadStoredJson(STORAGE_KEYS.bookmarks, [])
-  );
+  const [soundEnabled, setSoundEnabled] = useState(() => loadStoredBoolean(STORAGE_KEYS.sound, true));
+  const [bookmarks, setBookmarks] = useState(() => loadStoredJson(STORAGE_KEYS.bookmarks, []));
 
   const signature = useMemo(() => createSignature(deck), [deck]);
+  
+  // Artwork ID 生成器 (M52-YYYYMMDD-簽章前8碼)
+  const artworkId = useMemo(() => {
+    return `M52-${getYYYYMMDD(time)}-${signature.substring(0, 8)}`;
+  }, [signature, time]);
 
-  // 六、技術升級核心：實時編譯精確的預填 Google 表單網址
+  // Google 表單預填網址
   const googleFormUrl = useMemo(() => {
     if (!manifested) return "#";
-    const timeString = time ? formatTime(time) : formatTime(new Date());
     const params = new URLSearchParams();
     params.append(GOOGLE_FORM_CONFIG.entryDeck, deck.join(" · "));
     params.append(GOOGLE_FORM_CONFIG.entrySignature, `#${signature}`);
-    params.append(GOOGLE_FORM_CONFIG.entryTime, timeString);
+    params.append(GOOGLE_FORM_CONFIG.entryTime, time ? formatTime(time) : "");
     params.append(GOOGLE_FORM_CONFIG.entryQuote, quote);
+    if(GOOGLE_FORM_CONFIG.entryArtworkId) {
+      params.append(GOOGLE_FORM_CONFIG.entryArtworkId, artworkId);
+    }
     return `${GOOGLE_FORM_CONFIG.baseUrl}?${params.toString()}`;
-  }, [deck, signature, quote, time, manifested]);
+  }, [deck, signature, quote, time, manifested, artworkId]);
 
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.bookmarks, bookmarks);
-  }, [bookmarks]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.unlocked, String(unlocked));
-  }, [unlocked]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.sound, String(soundEnabled));
-  }, [soundEnabled]);
-
+  useEffect(() => { saveToStorage(STORAGE_KEYS.bookmarks, bookmarks); }, [bookmarks]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.sound, String(soundEnabled)); }, [soundEnabled]);
   useEffect(() => {
     trackPixelEvent("ViewContent");
     return () => {
@@ -396,192 +354,227 @@ export default function App() {
 
   function showToast(message) {
     setToast(message);
-    if (toastTimerRef.current) {
-      window.clearTimeout(toastTimerRef.current);
-    }
-    toastTimerRef.current = window.setTimeout(() => setToast(""), 1700);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(""), 2000);
   }
 
   function manifestNow() {
     if (soundEnabled) void playSingingBowl();
     setFading(true);
-
-    if (manifestTimerRef.current) {
-      window.clearTimeout(manifestTimerRef.current);
-    }
+    if (manifestTimerRef.current) window.clearTimeout(manifestTimerRef.current);
 
     manifestTimerRef.current = window.setTimeout(() => {
       const newDeck = shuffleDeck();
       const newQuote = randomQuote();
-      const currentTime = new Date();
-      
-      setDeck(newDeck);
-      setQuote(newQuote);
-      setTime(currentTime);
-      setManifested(true);
-      setFading(false);
-
-      trackPixelEvent("ManifestMoment", {
-        signature: createSignature(newDeck),
-        quote: newQuote
-      });
+      setDeck(newDeck); setQuote(newQuote); setTime(new Date());
+      setManifested(true); setFading(false);
+      trackPixelEvent("ManifestMoment", { signature: createSignature(newDeck), quote: newQuote });
     }, 320);
   }
 
   function bookmarkNow() {
-    if (!manifested) {
-      showToast("請先觀照當下");
-      return;
-    }
-    if (!unlocked) {
-      setShowPortal(true);
-      return;
-    }
-    if (bookmarks.some((item) => item.signature === signature)) {
-      showToast("這一刻已在觀照歷史中");
-      return;
-    }
-
-    const item = {
-      signature,
-      quote,
-      time: formatTime(time || new Date()),
-      deck: deck.join(" · "),
-    };
-
+    if (!manifested) return showToast("請先觀照當下");
+    if (bookmarks.some((item) => item.signature === signature)) return showToast("這一刻已在觀照歷史中");
+    const item = { signature, quote, time: formatTime(time || new Date()), deck: deck.join(" · ") };
     setBookmarks((prev) => [item, ...prev].slice(0, 12));
     showToast("此刻已刻印為時空書籤");
   }
 
-  async function exportImage() {
+  // 輔助函數：4行 x 13張 排版陣列
+  const getDeckGrid = () => [
+    deck.slice(0, 13).join(" · "),
+    deck.slice(13, 26).join(" · "),
+    deck.slice(26, 39).join(" · "),
+    deck.slice(39, 52).join(" · ")
+  ];
+
+  // ============================================================================
+  // T 恤印刷模板引擎 (Canvas)
+  // ============================================================================
+  async function generateFactoryArtwork(templateType) {
+    if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not supported");
+
+    const lines = getDeckGrid();
+
+    // 依據規格繪製
+    if (templateType === "black_front") {
+      canvas.width = 3500; canvas.height = 4500;
+      ctx.clearRect(0, 0, 3500, 4500); // 透明背景
+      ctx.textAlign = "center";
+      
+      // 主標
+      ctx.fillStyle = "#F5F5F0";
+      ctx.font = "600 110px 'Inter', 'Montserrat', sans-serif";
+      ctx.fillText("52! : THE ONLY MOMENT", 1750, 700);
+      
+      // 副標
+      ctx.fillStyle = "#C8C8C0";
+      ctx.font = "400 55px 'Inter', 'Montserrat', sans-serif";
+      ctx.fillText("A wearable record of a moment that will never happen again.", 1750, 850);
+      
+      // 牌序 (4行x13)
+      ctx.fillStyle = "#F5F5F0";
+      ctx.font = "400 65px 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif";
+      try { ctx.letterSpacing = "0.08em"; } catch {}
+      lines.forEach((line, i) => ctx.fillText(line, 1750, 1600 + i * 140));
+      try { ctx.letterSpacing = "0px"; } catch {}
+
+      // Signature
+      ctx.fillStyle = "#C8C8C0";
+      ctx.font = "500 60px 'IBM Plex Mono', 'Space Mono', monospace";
+      try { ctx.letterSpacing = "0.15em"; } catch {}
+      ctx.fillText(`SPACE-TIME SIGNATURE #${signature}`, 1750, 3600);
+
+      // 說明與網址
+      ctx.fillStyle = "#8C8C88";
+      ctx.font = "400 45px 'Inter', sans-serif";
+      try { ctx.letterSpacing = "0.05em"; } catch {}
+      ctx.fillText("Generated from one sequence among 8.06 × 10⁶⁷ possible arrangements.", 1750, 3750);
+      ctx.font = "400 35px 'Inter', sans-serif";
+      ctx.fillText("moment52.vercel.app", 1750, 4200);
+
+    } else if (templateType === "offwhite_front") {
+      canvas.width = 3500; canvas.height = 4500;
+      ctx.clearRect(0, 0, 3500, 4500);
+      ctx.textAlign = "center";
+      
+      ctx.fillStyle = "#222222";
+      ctx.font = "600 120px 'Inter', 'Space Grotesk', sans-serif";
+      try { ctx.letterSpacing = "0.2em"; } catch {}
+      ctx.fillText("THE ONLY MOMENT", 1750, 800);
+      
+      ctx.fillStyle = "#555555";
+      ctx.font = "400 60px 'Noto Sans TC', 'PingFang TC', sans-serif";
+      try { ctx.letterSpacing = "0.5em"; } catch {}
+      ctx.fillText("此刻唯一", 1750, 950);
+      
+      ctx.fillStyle = "#222222";
+      ctx.font = "400 65px 'IBM Plex Mono', monospace, sans-serif";
+      try { ctx.letterSpacing = "0.1em"; } catch {}
+      lines.forEach((line, i) => ctx.fillText(line, 1750, 1700 + i * 160));
+      
+      ctx.fillStyle = "#555555";
+      ctx.font = "500 55px 'IBM Plex Mono', monospace";
+      try { ctx.letterSpacing = "0.15em"; } catch {}
+      ctx.fillText(`SPACE-TIME SIGNATURE #${signature}`, 1750, 3600);
+      
+      ctx.fillStyle = "#222222";
+      ctx.font = "400 50px 'Inter', sans-serif";
+      try { ctx.letterSpacing = "0.05em"; } catch {}
+      ctx.fillText("This moment will never happen again.", 1750, 3750);
+      
+      ctx.fillStyle = "#8A8A8A";
+      ctx.font = "400 40px 'Inter', sans-serif";
+      ctx.fillText("One arrangement among 8.06 × 10⁶⁷ possibilities.", 1750, 3850);
+    }
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // 處理訂單按鈕點擊：生成印刷檔案並前往 Google 表單
+  async function handleOrderProcess(e) {
     if (!manifested) {
-      showToast("請先觀照當下");
-      return;
+      e.preventDefault(); return showToast("請先觀照當下，顯化屬於您的片刻");
     }
-    if (!unlocked) {
-      setShowPortal(true);
-      return;
-    }
+    
+    setIsGenerating(true);
+    showToast("正在為您生成高解析印刷檔與 Artwork ID...");
+    trackPixelEvent("ClickWearable", { signature, artworkId });
 
     try {
-      if (typeof document !== "undefined" && document.fonts?.ready) {
-        await document.fonts.ready;
-      }
+      // 產出並打包前端圖檔，因手機限制，這裡實作順序下載
+      const blackFrontBlob = await generateFactoryArtwork("black_front");
+      const offWhiteFrontBlob = await generateFactoryArtwork("offwhite_front");
+      
+      downloadBlob(blackFrontBlob, `${artworkId}-front-black.png`);
+      // 加上微小延遲防止瀏覽器阻擋
+      await new Promise(r => setTimeout(r, 400)); 
+      downloadBlob(offWhiteFrontBlob, `${artworkId}-front-offwhite.png`);
+      
+      setIsGenerating(false);
+      showToast("印刷圖檔已下載！即將開啟表單...");
+      
+      // 自動跳轉表單
+      setTimeout(() => {
+        window.open(googleFormUrl, "_blank");
+      }, 1500);
 
+    } catch (err) {
+      setIsGenerating(false);
+      showToast("圖檔生成失敗，請使用電腦版瀏覽器操作");
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // 社群分享圖卡 (氛圍感導向)
+  // ----------------------------------------------------------------------------
+  async function exportSocialImage() {
+    if (!manifested) return showToast("請先觀照當下");
+    try {
+      if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
       const canvas = document.createElement("canvas");
-      canvas.width = 1200;
-      canvas.height = 1600;
+      canvas.width = 1200; canvas.height = 1600;
       const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        showToast("目前瀏覽器不支援圖卡匯出");
-        return;
-      }
-
-      ctx.fillStyle = "#0a0a0a";
-      ctx.fillRect(0, 0, 1200, 1600);
-
+      
+      ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, 1200, 1600);
       for (let i = 0; i < 120; i += 1) {
         ctx.fillStyle = `rgba(212,212,212,${Math.random() * 0.25})`;
-        ctx.beginPath();
-        ctx.arc(Math.random() * 1200, Math.random() * 1600, Math.random() * 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(Math.random() * 1200, Math.random() * 1600, Math.random() * 1.5, 0, Math.PI * 2); ctx.fill();
       }
-
-      ctx.fillStyle = "#666666";
-      ctx.font = "400 24px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#666666"; ctx.font = "400 24px system-ui, sans-serif";
       try { ctx.letterSpacing = "0.18em"; } catch {}
       ctx.fillText("每一次洗牌 · 皆是宇宙級的顯化", 100, 120);
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "300 40px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#ffffff"; ctx.font = "300 40px system-ui, sans-serif";
       try { ctx.letterSpacing = "0.08em"; } catch {}
+      splitText(ctx, deck.join(" · "), 1000).slice(0, 9).forEach((line, i) => ctx.fillText(line, 100, 240 + i * 56));
 
-      splitText(ctx, deck.join(" · "), 1000)
-        .slice(0, 9)
-        .forEach((line, index) => {
-          ctx.fillText(line, 100, 240 + index * 56);
-        });
-
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(80, 170, 1040, 620);
-
-      ctx.fillStyle = "#ececec";
-      ctx.font = "300 42px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1; ctx.strokeRect(80, 170, 1040, 620);
+      ctx.fillStyle = "#ececec"; ctx.font = "300 42px system-ui, sans-serif";
       try { ctx.letterSpacing = "0px"; } catch {}
+      splitText(ctx, quote, 960).slice(0, 4).forEach((line, i) => ctx.fillText(line, 100, 930 + i * 66));
 
-      splitText(ctx, quote, 960)
-        .slice(0, 4)
-        .forEach((line, index) => {
-          ctx.fillText(line, 100, 930 + index * 66);
-        });
-
-      ctx.fillStyle = "#555555";
-      ctx.font = "300 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#555555"; ctx.font = "300 28px system-ui, sans-serif";
       ctx.fillText("此組合出現機率為 1 / 52!（約 8.06 × 10⁶⁷ 分之一）。", 100, 1240);
       ctx.fillText("自宇宙誕生至今，此排列極大機率從未出現，未來亦不會重臨。", 100, 1290);
       ctx.fillText(`SPACE-TIME SIGNATURE：#${signature}`, 100, 1420);
       ctx.fillText(`52!：此刻唯一｜${time ? formatTime(time) : formatTime(new Date())}`, 100, 1480);
 
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-      if (!blob) {
-        showToast("圖卡產生失敗");
-        return;
-      }
-
-      const file = new File([blob], `moment-52-${signature}.png`, { type: "image/png" });
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+      if (!blob) return;
+      const file = new File([blob], `social-card-${signature}.png`, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: "52!：此刻唯一",
-            text: quote,
-            files: [file],
-          });
-          return;
-        } catch {}
+        try { await navigator.share({ title: "52!：此刻唯一", text: quote, files: [file] }); return; } catch {}
       }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `moment-52-${signature}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      showToast("圖卡匯出失敗");
-    }
-  }
-
-  function handleOrderClick() {
-    trackPixelEvent("ClickWearable", { signature });
-  }
-
-  function unlockPortal() {
-    setUnlocked(true);
-    setShowPortal(false);
-    showToast("MVP 已模擬解鎖時空書籤與 T 恤訂製權限");
+      downloadBlob(blob, `social-card-${signature}.png`);
+    } catch { showToast("圖卡匯出失敗"); }
   }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
       <div className="pointer-events-none fixed inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.05),transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.035),transparent_24%)]" />
 
-      <button
-        onClick={() => setSoundEnabled((prev) => !prev)}
-        className="fixed right-5 top-5 z-30 inline-flex items-center gap-2 text-xs text-neutral-700 transition hover:text-neutral-300"
-        aria-label={soundEnabled ? "關閉聲音" : "開啟聲音"}
-      >
+      <button onClick={() => setSoundEnabled((p) => !p)} className="fixed right-5 top-5 z-30 inline-flex items-center gap-2 text-xs text-neutral-700 transition hover:text-neutral-300">
         {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
         {soundEnabled ? "聲音開啟" : "聲音關閉"}
       </button>
 
       <main className="relative flex min-h-screen items-center justify-center px-5 py-14">
         <section className="w-full max-w-[660px] text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500"
-          >
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500">
             每一次洗牌 · 皆是宇宙級的顯化
           </motion.div>
 
@@ -589,193 +582,74 @@ export default function App() {
             <motion.div
               key={signature + String(manifested)}
               initial={{ opacity: 0, filter: "blur(8px)" }}
-              animate={{
-                opacity: fading ? 0.28 : 1,
-                filter: fading ? "blur(6px)" : "blur(0px)",
-              }}
-              exit={{ opacity: 0, filter: "blur(8px)" }}
-              transition={{ duration: 0.5 }}
+              animate={{ opacity: fading ? 0.28 : 1, filter: fading ? "blur(6px)" : "blur(0px)" }}
+              exit={{ opacity: 0, filter: "blur(8px)" }} transition={{ duration: 0.5 }}
               className="mb-9 min-h-[146px] break-words rounded-[4px] border border-white/[0.055] bg-white/[0.022] px-6 py-6 text-[1.05rem] font-light leading-[1.9] tracking-[0.08em] text-white shadow-[0_0_80px_rgba(255,255,255,0.025)]"
             >
               {manifested ? deck.join(" · ") : "點擊下方，見證此刻唯一的因緣顯化"}
             </motion.div>
           </AnimatePresence>
 
-          <motion.div
-            animate={{ opacity: fading ? 0.28 : 1 }}
-            transition={{ duration: 0.45 }}
-            className="mx-auto mb-9 min-h-[82px] max-w-[620px] text-[1.12rem] font-light leading-[1.9] text-[#ececec]"
-          >
+          <motion.div animate={{ opacity: fading ? 0.28 : 1 }} transition={{ duration: 0.45 }} className="mx-auto mb-9 min-h-[82px] max-w-[620px] text-[1.12rem] font-light leading-[1.9] text-[#ececec]">
             {quote}
           </motion.div>
 
-          <button
-            onClick={() => setShowMath(true)}
-            className="mx-auto mb-12 block max-w-[560px] text-center text-[0.78rem] font-light leading-[1.7] text-neutral-600 transition hover:text-neutral-400"
-          >
+          <button onClick={() => setShowMath(true)} className="mx-auto mb-12 block max-w-[560px] text-center text-[0.78rem] font-light leading-[1.7] text-neutral-600 transition hover:text-neutral-400">
             {manifested ? (
-              <>
-                此組合出現機率為 1 / 52!（約 {FACTORIAL_SHORT} 分之一）。
-                <br />
-                自宇宙誕生 138 億年至今，此排列極大機率從未出現，未來亦不會重臨。
-              </>
-            ) : (
-              <>52 張牌共有 52! 種排列。點擊後，將有一組排列在此刻顯現。</>
-            )}
+              <>此組合出現機率為 1 / 52!（約 {FACTORIAL_SHORT} 分之一）。<br />自宇宙誕生 138 億年至今，此排列極大機率從未出現，未來亦不會重臨。</>
+            ) : (<>52 張牌共有 52! 種排列。點擊後，將有一組排列在此刻顯現。</>)}
           </button>
 
           <div className="flex flex-col items-center justify-center gap-4">
-            <button
-              onClick={manifestNow}
-              className="rounded-[2px] border border-white/20 bg-transparent px-8 py-3 text-[0.82rem] uppercase tracking-[0.18em] text-neutral-400 transition duration-300 hover:border-white/60 hover:bg-white/[0.025] hover:text-white active:scale-[0.98]"
-            >
+            <button onClick={manifestNow} className="rounded-[2px] border border-white/20 bg-transparent px-8 py-3 text-[0.82rem] uppercase tracking-[0.18em] text-neutral-400 transition duration-300 hover:border-white/60 hover:bg-white/[0.025] hover:text-white active:scale-[0.98]">
               觀照當下
             </button>
 
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-neutral-600">
-              <button
-                onClick={() => setShowMath(true)}
-                className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"
-              >
-                <Infinity className="h-3.5 w-3.5" /> 52!
-              </button>
+              <button onClick={() => setShowMath(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Infinity className="h-3.5 w-3.5" /> 52!</button>
               <span className="text-neutral-800">/</span>
-              <button
-                onClick={bookmarkNow}
-                className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"
-              >
-                <Bookmark className="h-3.5 w-3.5" /> 時空書籤
-              </button>
+              <button onClick={bookmarkNow} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Bookmark className="h-3.5 w-3.5" /> 時空書籤</button>
               <span className="text-neutral-800">/</span>
-              <button
-                onClick={exportImage}
-                className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"
-              >
-                <Share2 className="h-3.5 w-3.5" /> 匯出圖卡
-              </button>
+              <button onClick={exportSocialImage} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Share2 className="h-3.5 w-3.5" /> 匯出分享圖卡</button>
               <span className="text-neutral-800">/</span>
-              <button
-                onClick={() => setShowPortal(true)}
-                className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"
-              >
-                <Heart className="h-3.5 w-3.5" /> 支持 & 訂製
-              </button>
+              <button onClick={() => setShowPortal(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Shirt className="h-3.5 w-3.5" /> 訂製此刻 T 恤</button>
             </div>
           </div>
 
           {manifested && (
             <div className="mt-8 font-mono text-[0.68rem] tracking-[0.2em] text-neutral-700">
-              SPACE-TIME SIGNATURE #{signature}
-              {time ? ` · ${formatTime(time)}` : ""}
-            </div>
-          )}
-
-          {bookmarks.length > 0 && (
-            <div className="mx-auto mt-9 max-w-[560px] border-t border-white/[0.06] pt-5 text-left">
-              <div className="mb-3 text-center text-[0.68rem] uppercase tracking-[0.22em] text-neutral-700">
-                觀照歷史
-              </div>
-              {bookmarks.slice(0, 3).map((item) => (
-                <div
-                  key={`${item.signature}-${item.time}`}
-                  className="mb-3 border border-white/[0.05] bg-white/[0.018] p-3 text-xs leading-6 text-neutral-500"
-                >
-                  <div className="mb-1 font-mono text-neutral-600">
-                    #{item.signature} · {item.time}
-                  </div>
-                  <div>{item.quote}</div>
-                </div>
-              ))}
+              SPACE-TIME SIGNATURE #{signature} {time ? ` · ${formatTime(time)}` : ""}
             </div>
           )}
         </section>
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300">
+        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300 whitespace-nowrap">
           {toast}
         </div>
-      )}
-
-      {showMath && (
-        <Modal onClose={() => setShowMath(false)}>
-          <div className="pr-7">
-            <div className="mb-5 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">
-              The Mathematical Shock
-            </div>
-            <h2 className="mb-5 text-2xl font-light text-white">52! 的冷數據</h2>
-            <p className="mb-5 text-sm font-light leading-8 text-neutral-400">
-              52 張不同的牌排成一列，第一張有 52 種可能，第二張剩 51 種，第三張剩 50 種，直到最後一張。全部相乘，就是 52!。
-            </p>
-            <div className="mb-5 break-words border border-white/[0.06] bg-white/[0.02] p-4 font-mono text-xs leading-7 text-neutral-500">
-              {FACTORIAL_FULL}
-            </div>
-            <div className="space-y-3 text-sm font-light leading-7 text-neutral-500">
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2">
-                <span>宇宙年齡</span>
-                <span className="text-neutral-300">約 138 億年</span>
-              </div>
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2">
-                <span>宇宙誕生至今秒數</span>
-                <span className="text-neutral-300">約 4.35 × 10¹⁷ 秒</span>
-              </div>
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2">
-                <span>52 張牌完整排列</span>
-                <span className="text-neutral-300">約 8.06 × 10⁶⁷ 種</span>
-              </div>
-            </div>
-          </div>
-        </Modal>
       )}
 
       {showPortal && (
         <Modal onClose={() => setShowPortal(false)}>
           <div className="pr-7">
-            <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">
-              The Portal & Custom Wearable
-            </div>
-            <h2 className="mb-4 text-2xl font-light text-white">
-              建立連接：時空書籤與客製 T 恤
-            </h2>
+            <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">Custom Wearable & Production</div>
+            <h2 className="mb-4 text-2xl font-light text-white">訂製這一刻的 T 恤｜NT$1,280</h2>
             <p className="mb-4 text-sm font-light leading-7 text-neutral-400">
-              免費模式提供因緣顯化觀照。若此片刻深深觸動你，可付費解鎖**「時空書籤權限」**，將當下牌序、金句、哈希簽章永久刻印；同時開啟**「訂製此刻唯一 T 恤（NT$1,280）」**之實體具現化通道。
+              系統將依據您專屬的 <b>Artwork ID: {manifested ? artworkId : "尚未顯化"}</b> 自動產生符合工廠規格的高解析度去背印刷檔，並導引您至表單填寫收件資訊。
             </p>
 
             <div className="mb-5 space-y-3 rounded bg-white/[0.02] border border-white/[0.05] p-4 text-[0.78rem] leading-6 text-neutral-500">
-              <div>
-                <span className="text-neutral-400">【客製化商品條款】</span>
-                本商品依據您專屬生成之牌序與時空簽章獨立印製，屬於消保法「客製化給付」合理例外排除項目，訂單送出後即進入生產排程，除排版出錯或衣服重大瑕疵外，恕不適用七天鑑賞期任意無條件退換貨。
-              </div>
-              <div className="border-t border-white/[0.05] pt-2">
-                <span className="text-neutral-400">【個資使用聲明】</span>
-                後續訂購表單中所收集之姓名、物流地址、聯絡電話及 Email，僅用於本專案之物流配送、訂單人工確認及售後客服，不作任何其他範疇之用途。
-              </div>
+              <div><span className="text-neutral-400">【生產與版權聲明】</span> 點擊按鈕後，瀏覽器將自動為您下載「黑 T」與「米白 T」的高解析度印刷原檔，同時開啟表單。請於表單內確認您的款式與尺寸。</div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              {!unlocked ? (
-                <button
-                  onClick={unlockPortal}
-                  className="inline-flex flex-1 items-center justify-center gap-2 border border-white/20 bg-white/[0.02] px-5 py-3 text-sm text-neutral-200 transition hover:border-white/60 hover:text-white"
-                >
-                  <LockKeyhole className="h-4 w-4" /> 模擬隨喜解鎖權限
-                </button>
-              ) : (
-                <a
-                  href={googleFormUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={handleOrderClick}
-                  className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
-                >
-                  進入 Google 表單（自動帶入牌序）
-                </a>
-              )}
               <button
-                onClick={exportImage}
-                className="inline-flex items-center justify-center gap-2 border border-white/10 px-5 py-3 text-sm text-neutral-500 transition hover:border-white/40 hover:text-neutral-200"
+                onClick={handleOrderProcess}
+                disabled={isGenerating}
+                className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 disabled:opacity-50"
               >
-                <Download className="h-4 w-4" /> 匯出圖卡
+                {isGenerating ? "正在生成高解析圖檔..." : "下載印刷原檔並前往訂購表單"}
               </button>
             </div>
           </div>
