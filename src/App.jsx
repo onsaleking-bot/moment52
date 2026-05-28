@@ -145,6 +145,11 @@ let sharedAudioContext = null;
 
 function isBrowser() { return typeof window !== "undefined"; }
 
+function isLineBrowser() {
+  if (!isBrowser()) return false;
+  return /Line/i.test(navigator.userAgent);
+}
+
 function trackPixelEvent(eventName, params = {}) {
   if (isBrowser() && window.fbq) {
     try { window.fbq("trackCustom", eventName, params); } catch (e) { console.error(e); }
@@ -304,7 +309,6 @@ function Modal({ children, onClose }) {
   );
 }
 
-// 核心工廠印刷圖渲染引擎 (抽離為純函數以供前台與營運後台共用)
 async function renderFactoryCanvas(templateType, targetDeckArr, targetSignature) {
   if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
   const canvas = document.createElement("canvas");
@@ -416,7 +420,6 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(() => loadStoredBoolean(STORAGE_KEYS.sound, true));
   const [bookmarks, setBookmarks] = useState(() => loadStoredJson(STORAGE_KEYS.bookmarks, []));
 
-  // 營運端表單狀態
   const [opDeckStr, setOpDeckStr] = useState("");
   const [opSignature, setOpSignature] = useState("");
 
@@ -459,7 +462,6 @@ export default function App() {
       setShowOperator(true);
       operatorClickCount.current = 0;
     }
-    // 兩秒後重置點擊計數
     setTimeout(() => { operatorClickCount.current = 0; }, 2000);
   }
 
@@ -485,7 +487,6 @@ export default function App() {
     showToast("此刻已刻印為時空書籤");
   }
 
-  // 營運端手動重新生成印刷檔
   async function handleOperatorGenerate(colorType) {
     if (!opDeckStr.trim() || !opSignature.trim()) return showToast("請完整填寫牌序與 Signature");
     const arr = opDeckStr.split("·").map(s => s.trim()).filter(Boolean);
@@ -504,27 +505,26 @@ export default function App() {
 
   async function handleOrderProcess(e) {
     if (!manifested) {
-      e.preventDefault(); return showToast("請先觀照當下，顯化屬於您的片刻");
+      e.preventDefault();
+      return showToast("請先觀照當下，顯化屬於您的片刻");
     }
     
     trackPixelEvent("ClickWearable", { signature, artworkId });
-    showToast("即將前往訂購表單...");
-
-    try {
-      // 嘗試在背景下載預覽備份，但不阻擋使用者前進
-      const blackFrontBlob = await renderFactoryCanvas("black_front", deck, signature);
-      downloadBlob(blackFrontBlob, `${artworkId}-front-black.png`);
-    } catch (err) {
-      // 忽略行動裝置阻擋錯誤，確保表單能順利開啟
-    }
+    showToast("即將開啟訂製表單...");
 
     setTimeout(() => {
       window.open(googleFormUrl, "_blank");
-    }, 800);
+    }, 500);
   }
 
   async function exportSocialImage() {
     if (!manifested) return showToast("請先觀照當下");
+    
+    if (isLineBrowser()) {
+      showToast("LINE 內建瀏覽器不支援圖片下載。請點右上角「⋯」選擇以 Chrome / Safari 開啟，或直接截圖保存");
+      return;
+    }
+
     try {
       if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
       const canvas = document.createElement("canvas");
@@ -630,7 +630,6 @@ export default function App() {
         </section>
       </main>
 
-      {/* 營運端隱藏面板 (Operator Mode) */}
       {showOperator && (
         <Modal onClose={() => setShowOperator(false)}>
           <div className="pr-7">
@@ -667,7 +666,6 @@ export default function App() {
         </Modal>
       )}
 
-      {/* 52! 冷數據面板修復歸位 */}
       {showMath && (
         <Modal onClose={() => setShowMath(false)}>
           <div className="pr-7">
@@ -698,7 +696,7 @@ export default function App() {
             </p>
 
             <div className="mb-5 space-y-3 rounded bg-white/[0.02] border border-white/[0.05] p-4 text-[0.78rem] leading-6 text-neutral-500">
-              <div><span className="text-neutral-400">【生產與版權聲明】</span> 系統將產生正面印刷原檔供您留存備份，同時引導您進入表單。請於表單內確認您的款式與尺寸。客製商品不適用七天鑑賞期退換貨。</div>
+              <div><span className="text-neutral-400">【訂製與生產說明】</span> 系統已為此刻建立 Artwork ID。請進入表單填寫尺寸、款式與收件資料。營運端將依據表單中的牌序與 Signature 重新產生工廠印刷圖檔。客製商品不適用七天鑑賞期退換貨。</div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -706,7 +704,7 @@ export default function App() {
                 onClick={handleOrderProcess}
                 className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
               >
-                進入訂製表單 (系統將為您備份印刷原檔)
+                前往訂製表單
               </button>
             </div>
           </div>
