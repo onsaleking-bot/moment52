@@ -22,6 +22,15 @@ const STORAGE_KEYS = {
   sound: "moment52_sound",
 };
 
+// 六、技術升級核心：已成功對接文傑建立的真實 Google 表單預填網址與對應欄位 ID
+const GOOGLE_FORM_CONFIG = {
+  baseUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform",
+  entryDeck: "entry.907849226",      // 牌序欄位
+  entrySignature: "entry.1745604772", // 簽章欄位
+  entryTime: "entry.284034277",      // 時間欄位
+  entryQuote: "entry.369992627",     // 金句欄位
+};
+
 const QUOTES = [
   "雨，只是雨。沉默，只是沉默。眼前的牌，也只是此時此刻的因緣和合。",
   "這一組排列，是高達 52! 的宇宙機率在這一秒的凝聚。它來了，然後它就會散去。",
@@ -34,7 +43,7 @@ const QUOTES = [
   "你感覺到的那些內耗與痛苦，其實只是大腦部門在處理衝突時的摩擦力。你，不是那個衝突。",
   "大腦裡根本沒有總司令。那個感到掙扎的自我，不過是系統出錯時臨時喚醒的除錯機制。",
   "放下對主宰權的焦慮。承認吧，我們從來就不是自己以為的那個主控者。",
-  "任何迎面而來的焦慮、拖延與愧疚，都只是低階代理人之間的訊號延遲。冷靜地看著它，它就會大解離。",
+  "any 迎面而來的焦慮、拖延與愧疚，都只是低階代理人之間的訊號延遲。冷靜地看著它，它就會大解離。",
   "自我是一個功能，而非一個實體。當系統不再內耗，這個救火隊員自然會退場。",
   "你不需要對每一個隨機產出的結果負責，但你必須對此時此刻寫下的意圖負責。",
   "任何試圖用過去經驗來導航當下的行為，都會在系統底層產生巨大的摩擦力。",
@@ -75,7 +84,7 @@ const QUOTES = [
   "你以為你在等未來，其實生命只在現在開門。",
   "牌沒有預言你，牌只是提醒你回來。",
   "當下不是靜止，而是所有因緣正在流動。",
-  "你不是缺少答案，你只是離此刻太遠。",
+  "你不是缺少答案，你離此刻太遠。",
   "一副牌洗出宇宙，一個念頭洗出人生。",
   "今天的排列，不需要和昨天相同。你也是。",
   "別讓一個念頭替整個宇宙下結論。",
@@ -138,9 +147,18 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
+function trackPixelEvent(eventName, params = {}) {
+  if (isBrowser() && window.fbq) {
+    try {
+      window.fbq("trackCustom", eventName, params);
+    } catch (e) {
+      console.error("Meta Pixel tracking error:", e);
+    }
+  }
+}
+
 function loadStoredBoolean(key, fallback = false) {
   if (!isBrowser()) return fallback;
-
   try {
     const value = window.localStorage.getItem(key);
     if (value === null) return fallback;
@@ -152,7 +170,6 @@ function loadStoredBoolean(key, fallback = false) {
 
 function loadStoredJson(key, fallback) {
   if (!isBrowser()) return fallback;
-
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return fallback;
@@ -165,43 +182,34 @@ function loadStoredJson(key, fallback) {
 
 function saveToStorage(key, value) {
   if (!isBrowser()) return;
-
   try {
     const storedValue = typeof value === "string" ? value : JSON.stringify(value);
     window.localStorage.setItem(key, storedValue);
-  } catch {
-    // Some browsers, privacy modes, or embedded previews may block localStorage.
-  }
+  } catch {}
 }
 
 function secureRandomInt(maxExclusive) {
   if (maxExclusive <= 0) return 0;
-
   if (isBrowser() && window.crypto?.getRandomValues) {
     const array = new Uint32Array(1);
     const maxUint = 0xffffffff;
     const limit = Math.floor(maxUint / maxExclusive) * maxExclusive;
-
     let value;
     do {
       window.crypto.getRandomValues(array);
       value = array[0];
     } while (value >= limit);
-
     return value % maxExclusive;
   }
-
   return Math.floor(Math.random() * maxExclusive);
 }
 
 function shuffleDeck() {
   const deck = [...BASE_DECK];
-
   for (let i = deck.length - 1; i > 0; i -= 1) {
     const j = secureRandomInt(i + 1);
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
-
   return deck;
 }
 
@@ -213,12 +221,10 @@ function createSignature(deck) {
   const text = deck.join("");
   let hash = 0xcbf29ce484222325n;
   const prime = 0x100000001b3n;
-
   for (let i = 0; i < text.length; i += 1) {
     hash ^= BigInt(text.charCodeAt(i));
     hash = BigInt.asUintN(64, hash * prime);
   }
-
   return hash.toString(16).toUpperCase().padStart(16, "0");
 }
 
@@ -237,16 +243,13 @@ async function playSingingBowl() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
-
     if (!sharedAudioContext) {
       sharedAudioContext = new AudioContext();
     }
-
     const ctx = sharedAudioContext;
     if (ctx.state === "suspended") {
       await ctx.resume();
     }
-
     const osc = ctx.createOscillator();
     const overtone = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -273,19 +276,15 @@ async function playSingingBowl() {
     overtone.start();
     osc.stop(ctx.currentTime + 3.7);
     overtone.stop(ctx.currentTime + 3.7);
-  } catch {
-    // Browser may restrict audio. The app should remain fully usable without sound.
-  }
+  } catch {}
 }
 
 function splitText(ctx, text, maxWidth) {
   const chars = text.split("");
   const lines = [];
   let current = "";
-
   chars.forEach((char) => {
     const test = current + char;
-
     if (ctx.measureText(test).width > maxWidth && current) {
       lines.push(current);
       current = char;
@@ -293,7 +292,6 @@ function splitText(ctx, text, maxWidth) {
       current = test;
     }
   });
-
   if (current) lines.push(current);
   return lines;
 }
@@ -303,7 +301,6 @@ function Modal({ children, onClose }) {
     function handleKeyDown(event) {
       if (event.key === "Escape") onClose();
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
@@ -365,6 +362,18 @@ export default function App() {
 
   const signature = useMemo(() => createSignature(deck), [deck]);
 
+  // 六、技術升級核心：實時編譯精確的預填 Google 表單網址
+  const googleFormUrl = useMemo(() => {
+    if (!manifested) return "#";
+    const timeString = time ? formatTime(time) : formatTime(new Date());
+    const params = new URLSearchParams();
+    params.append(GOOGLE_FORM_CONFIG.entryDeck, deck.join(" · "));
+    params.append(GOOGLE_FORM_CONFIG.entrySignature, `#${signature}`);
+    params.append(GOOGLE_FORM_CONFIG.entryTime, timeString);
+    params.append(GOOGLE_FORM_CONFIG.entryQuote, quote);
+    return `${GOOGLE_FORM_CONFIG.baseUrl}?${params.toString()}`;
+  }, [deck, signature, quote, time, manifested]);
+
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.bookmarks, bookmarks);
   }, [bookmarks]);
@@ -378,6 +387,7 @@ export default function App() {
   }, [soundEnabled]);
 
   useEffect(() => {
+    trackPixelEvent("ViewContent");
     return () => {
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
       if (manifestTimerRef.current) window.clearTimeout(manifestTimerRef.current);
@@ -386,17 +396,14 @@ export default function App() {
 
   function showToast(message) {
     setToast(message);
-
     if (toastTimerRef.current) {
       window.clearTimeout(toastTimerRef.current);
     }
-
     toastTimerRef.current = window.setTimeout(() => setToast(""), 1700);
   }
 
   function manifestNow() {
     if (soundEnabled) void playSingingBowl();
-
     setFading(true);
 
     if (manifestTimerRef.current) {
@@ -404,11 +411,20 @@ export default function App() {
     }
 
     manifestTimerRef.current = window.setTimeout(() => {
-      setDeck(shuffleDeck());
-      setQuote(randomQuote());
-      setTime(new Date());
+      const newDeck = shuffleDeck();
+      const newQuote = randomQuote();
+      const currentTime = new Date();
+      
+      setDeck(newDeck);
+      setQuote(newQuote);
+      setTime(currentTime);
       setManifested(true);
       setFading(false);
+
+      trackPixelEvent("ManifestMoment", {
+        signature: createSignature(newDeck),
+        quote: newQuote
+      });
     }, 320);
   }
 
@@ -417,12 +433,10 @@ export default function App() {
       showToast("請先觀照當下");
       return;
     }
-
     if (!unlocked) {
       setShowPortal(true);
       return;
     }
-
     if (bookmarks.some((item) => item.signature === signature)) {
       showToast("這一刻已在觀照歷史中");
       return;
@@ -444,7 +458,6 @@ export default function App() {
       showToast("請先觀照當下");
       return;
     }
-
     if (!unlocked) {
       setShowPortal(true);
       return;
@@ -458,7 +471,6 @@ export default function App() {
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
       canvas.height = 1600;
-
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         showToast("目前瀏覽器不支援圖卡匯出");
@@ -477,20 +489,12 @@ export default function App() {
 
       ctx.fillStyle = "#666666";
       ctx.font = "400 24px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-      try {
-        ctx.letterSpacing = "0.18em";
-      } catch {
-        // Canvas letterSpacing support varies.
-      }
+      try { ctx.letterSpacing = "0.18em"; } catch {}
       ctx.fillText("每一次洗牌 · 皆是宇宙級的顯化", 100, 120);
 
       ctx.fillStyle = "#ffffff";
       ctx.font = "300 40px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-      try {
-        ctx.letterSpacing = "0.08em";
-      } catch {
-        // Canvas letterSpacing support varies.
-      }
+      try { ctx.letterSpacing = "0.08em"; } catch {}
 
       splitText(ctx, deck.join(" · "), 1000)
         .slice(0, 9)
@@ -504,11 +508,7 @@ export default function App() {
 
       ctx.fillStyle = "#ececec";
       ctx.font = "300 42px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-      try {
-        ctx.letterSpacing = "0px";
-      } catch {
-        // Canvas letterSpacing support varies.
-      }
+      try { ctx.letterSpacing = "0px"; } catch {}
 
       splitText(ctx, quote, 960)
         .slice(0, 4)
@@ -530,7 +530,6 @@ export default function App() {
       }
 
       const file = new File([blob], `moment-52-${signature}.png`, { type: "image/png" });
-
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
@@ -539,9 +538,7 @@ export default function App() {
             files: [file],
           });
           return;
-        } catch {
-          // User may cancel sharing. Continue to download fallback.
-        }
+        } catch {}
       }
 
       const url = URL.createObjectURL(blob);
@@ -555,26 +552,30 @@ export default function App() {
     }
   }
 
+  function handleOrderClick() {
+    trackPixelEvent("ClickWearable", { signature });
+  }
+
   function unlockPortal() {
     setUnlocked(true);
     setShowPortal(false);
-    showToast("MVP 已模擬解鎖時空書籤");
+    showToast("MVP 已模擬解鎖時空書籤與 T 恤訂製權限");
   }
 
   return (
-    <div className="min-h-[100dvh] overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
       <div className="pointer-events-none fixed inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.05),transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.035),transparent_24%)]" />
 
       <button
         onClick={() => setSoundEnabled((prev) => !prev)}
-        className="fixed right-5 top-[calc(1.25rem+env(safe-area-inset-top))] z-30 inline-flex items-center gap-2 text-xs text-neutral-700 transition hover:text-neutral-300"
+        className="fixed right-5 top-5 z-30 inline-flex items-center gap-2 text-xs text-neutral-700 transition hover:text-neutral-300"
         aria-label={soundEnabled ? "關閉聲音" : "開啟聲音"}
       >
         {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
         {soundEnabled ? "聲音開啟" : "聲音關閉"}
       </button>
 
-      <main className="relative flex min-h-[100dvh] items-center justify-center px-5 py-[calc(3.5rem+env(safe-area-inset-top))]">
+      <main className="relative flex min-h-screen items-center justify-center px-5 py-14">
         <section className="w-full max-w-[660px] text-center">
           <motion.div
             initial={{ opacity: 0, y: -8 }}
@@ -657,7 +658,7 @@ export default function App() {
                 onClick={() => setShowPortal(true)}
                 className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"
               >
-                <Heart className="h-3.5 w-3.5" /> 支持
+                <Heart className="h-3.5 w-3.5" /> 支持 & 訂製
               </button>
             </div>
           </div>
@@ -691,7 +692,7 @@ export default function App() {
       </main>
 
       {toast && (
-        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300">
+        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300">
           {toast}
         </div>
       )}
@@ -730,25 +731,46 @@ export default function App() {
       {showPortal && (
         <Modal onClose={() => setShowPortal(false)}>
           <div className="pr-7">
-            <div className="mb-5 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">
-              The Portal
+            <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">
+              The Portal & Custom Wearable
             </div>
-            <h2 className="mb-5 text-2xl font-light text-white">
-              時空書籤｜US$0.99
+            <h2 className="mb-4 text-2xl font-light text-white">
+              建立連接：時空書籤與客製 T 恤
             </h2>
-            <p className="mb-5 text-sm font-light leading-8 text-neutral-400">
-              免費模式讓你觀看顯化。若某一刻真的擊中你，可以購買一枚時空書籤，保存牌序、金句、時間簽章，並匯出極簡圖卡。
+            <p className="mb-4 text-sm font-light leading-7 text-neutral-400">
+              免費模式提供因緣顯化觀照。若此片刻深深觸動你，可付費解鎖**「時空書籤權限」**，將當下牌序、金句、哈希簽章永久刻印；同時開啟**「訂製此刻唯一 T 恤（NT$1,280）」**之實體具現化通道。
             </p>
-            <div className="mb-6 border border-white/[0.06] bg-white/[0.02] p-4 text-sm leading-7 text-neutral-500">
-              目前是 MVP 模擬流程，不會真正收款。正式 App 版應以 Apple In-App Purchase 與 Google Play Billing 實作。
+
+            <div className="mb-5 space-y-3 rounded bg-white/[0.02] border border-white/[0.05] p-4 text-[0.78rem] leading-6 text-neutral-500">
+              <div>
+                <span className="text-neutral-400">【客製化商品條款】</span>
+                本商品依據您專屬生成之牌序與時空簽章獨立印製，屬於消保法「客製化給付」合理例外排除項目，訂單送出後即進入生產排程，除排版出錯或衣服重大瑕疵外，恕不適用七天鑑賞期任意無條件退換貨。
+              </div>
+              <div className="border-t border-white/[0.05] pt-2">
+                <span className="text-neutral-400">【個資使用聲明】</span>
+                後續訂購表單中所收集之姓名、物流地址、聯絡電話及 Email，僅用於本專案之物流配送、訂單人工確認及售後客服，不作任何其他範疇之用途。
+              </div>
             </div>
+
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={unlockPortal}
-                className="inline-flex items-center justify-center gap-2 border border-white/20 bg-transparent px-5 py-3 text-sm text-neutral-300 transition hover:border-white/60 hover:text-white"
-              >
-                <LockKeyhole className="h-4 w-4" /> 模擬解鎖
-              </button>
+              {!unlocked ? (
+                <button
+                  onClick={unlockPortal}
+                  className="inline-flex flex-1 items-center justify-center gap-2 border border-white/20 bg-white/[0.02] px-5 py-3 text-sm text-neutral-200 transition hover:border-white/60 hover:text-white"
+                >
+                  <LockKeyhole className="h-4 w-4" /> 模擬隨喜解鎖權限
+                </button>
+              ) : (
+                <a
+                  href={googleFormUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleOrderClick}
+                  className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
+                >
+                  進入 Google 表單（自動帶入牌序）
+                </a>
+              )}
               <button
                 onClick={exportImage}
                 className="inline-flex items-center justify-center gap-2 border border-white/10 px-5 py-3 text-sm text-neutral-500 transition hover:border-white/40 hover:text-neutral-200"
