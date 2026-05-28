@@ -10,6 +10,7 @@ import {
   VolumeX,
   X,
   Shirt,
+  Settings,
 } from "lucide-react";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -21,7 +22,6 @@ const STORAGE_KEYS = {
   sound: "moment52_sound",
 };
 
-// Google 表單欄位規格配置（已完整綁定所有 entry ID，包含 Artwork ID）
 const GOOGLE_FORM_CONFIG = {
   baseUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform",
   entryDeck: "entry.907849226",      
@@ -304,31 +304,128 @@ function Modal({ children, onClose }) {
   );
 }
 
+// 核心工廠印刷圖渲染引擎 (抽離為純函數以供前台與營運後台共用)
+async function renderFactoryCanvas(templateType, targetDeckArr, targetSignature) {
+  if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+
+  const lines = [
+    targetDeckArr.slice(0, 13).join(" · "),
+    targetDeckArr.slice(13, 26).join(" · "),
+    targetDeckArr.slice(26, 39).join(" · "),
+    targetDeckArr.slice(39, 52).join(" · ")
+  ];
+
+  if (templateType === "black_front") {
+    canvas.width = 3500; canvas.height = 4500;
+    ctx.clearRect(0, 0, 3500, 4500); 
+    ctx.textAlign = "center";
+    
+    ctx.fillStyle = "#F5F5F0";
+    ctx.font = "600 110px 'Inter', 'Montserrat', sans-serif";
+    ctx.fillText("52! : THE ONLY MOMENT", 1750, 700);
+    
+    ctx.fillStyle = "#C8C8C0";
+    ctx.font = "400 55px 'Inter', 'Montserrat', sans-serif";
+    ctx.fillText("A wearable record of a moment that will never happen again.", 1750, 850);
+    
+    ctx.fillStyle = "#F5F5F0";
+    ctx.font = "400 65px 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif";
+    try { ctx.letterSpacing = "0.08em"; } catch {}
+    lines.forEach((line, i) => ctx.fillText(line, 1750, 1600 + i * 140));
+    try { ctx.letterSpacing = "0px"; } catch {}
+
+    ctx.fillStyle = "#C8C8C0";
+    ctx.font = "500 60px 'IBM Plex Mono', 'Space Mono', monospace";
+    try { ctx.letterSpacing = "0.15em"; } catch {}
+    ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
+
+    ctx.fillStyle = "#8C8C88";
+    ctx.font = "400 45px 'Inter', sans-serif";
+    try { ctx.letterSpacing = "0.05em"; } catch {}
+    ctx.fillText("Generated from one sequence among 8.06 × 10⁶⁷ possible arrangements.", 1750, 3750);
+    ctx.font = "400 35px 'Inter', sans-serif";
+    ctx.fillText("moment52.vercel.app", 1750, 4200);
+
+  } else if (templateType === "offwhite_front") {
+    canvas.width = 3500; canvas.height = 4500;
+    ctx.clearRect(0, 0, 3500, 4500);
+    ctx.textAlign = "center";
+    
+    ctx.fillStyle = "#222222";
+    ctx.font = "600 120px 'Inter', 'Space Grotesk', sans-serif";
+    try { ctx.letterSpacing = "0.2em"; } catch {}
+    ctx.fillText("THE ONLY MOMENT", 1750, 800);
+    
+    ctx.fillStyle = "#555555";
+    ctx.font = "400 60px 'Noto Sans TC', 'PingFang TC', sans-serif";
+    try { ctx.letterSpacing = "0.5em"; } catch {}
+    ctx.fillText("此刻唯一", 1750, 950);
+    
+    ctx.fillStyle = "#222222";
+    ctx.font = "400 65px 'IBM Plex Mono', monospace, sans-serif";
+    try { ctx.letterSpacing = "0.1em"; } catch {}
+    lines.forEach((line, i) => ctx.fillText(line, 1750, 1700 + i * 160));
+    
+    ctx.fillStyle = "#555555";
+    ctx.font = "500 55px 'IBM Plex Mono', monospace";
+    try { ctx.letterSpacing = "0.15em"; } catch {}
+    ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
+    
+    ctx.fillStyle = "#222222";
+    ctx.font = "400 50px 'Inter', sans-serif";
+    try { ctx.letterSpacing = "0.05em"; } catch {}
+    ctx.fillText("This moment will never happen again.", 1750, 3750);
+    
+    ctx.fillStyle = "#8A8A8A";
+    ctx.font = "400 40px 'Inter', sans-serif";
+    ctx.fillText("One arrangement among 8.06 × 10⁶⁷ possibilities.", 1750, 3850);
+  }
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export default function App() {
   const [deck, setDeck] = useState(() => shuffleDeck());
   const [quote, setQuote] = useState("點擊下方，見證此刻唯一的因緣顯化。");
   const [time, setTime] = useState(null);
   const [manifested, setManifested] = useState(false);
   const [fading, setFading] = useState(false);
+  
   const [showMath, setShowMath] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
+  const [showOperator, setShowOperator] = useState(false);
   const [toast, setToast] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const toastTimerRef = useRef(null);
   const manifestTimerRef = useRef(null);
+  const operatorClickCount = useRef(0);
 
   const [soundEnabled, setSoundEnabled] = useState(() => loadStoredBoolean(STORAGE_KEYS.sound, true));
   const [bookmarks, setBookmarks] = useState(() => loadStoredJson(STORAGE_KEYS.bookmarks, []));
 
+  // 營運端表單狀態
+  const [opDeckStr, setOpDeckStr] = useState("");
+  const [opSignature, setOpSignature] = useState("");
+
   const signature = useMemo(() => createSignature(deck), [deck]);
   
-  // Artwork ID 生成器 (M52-YYYYMMDD-簽章前8碼)
   const artworkId = useMemo(() => {
     return `M52-${getYYYYMMDD(time)}-${signature.substring(0, 8)}`;
   }, [signature, time]);
 
-  // Google 表單預填網址
   const googleFormUrl = useMemo(() => {
     if (!manifested) return "#";
     const params = new URLSearchParams();
@@ -336,9 +433,7 @@ export default function App() {
     params.append(GOOGLE_FORM_CONFIG.entrySignature, `#${signature}`);
     params.append(GOOGLE_FORM_CONFIG.entryTime, time ? formatTime(time) : "");
     params.append(GOOGLE_FORM_CONFIG.entryQuote, quote);
-    if(GOOGLE_FORM_CONFIG.entryArtworkId) {
-      params.append(GOOGLE_FORM_CONFIG.entryArtworkId, artworkId);
-    }
+    params.append(GOOGLE_FORM_CONFIG.entryArtworkId, artworkId);
     return `${GOOGLE_FORM_CONFIG.baseUrl}?${params.toString()}`;
   }, [deck, signature, quote, time, manifested, artworkId]);
 
@@ -355,7 +450,17 @@ export default function App() {
   function showToast(message) {
     setToast(message);
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(""), 2000);
+    toastTimerRef.current = window.setTimeout(() => setToast(""), 2500);
+  }
+
+  function handleSecretClick() {
+    operatorClickCount.current += 1;
+    if (operatorClickCount.current >= 5) {
+      setShowOperator(true);
+      operatorClickCount.current = 0;
+    }
+    // 兩秒後重置點擊計數
+    setTimeout(() => { operatorClickCount.current = 0; }, 2000);
   }
 
   function manifestNow() {
@@ -380,147 +485,44 @@ export default function App() {
     showToast("此刻已刻印為時空書籤");
   }
 
-  // 輔助函數：4行 x 13張 排版陣列
-  const getDeckGrid = () => [
-    deck.slice(0, 13).join(" · "),
-    deck.slice(13, 26).join(" · "),
-    deck.slice(26, 39).join(" · "),
-    deck.slice(39, 52).join(" · ")
-  ];
-
-  // ============================================================================
-  // T 恤印刷模板引擎 (Canvas)
-  // ============================================================================
-  async function generateFactoryArtwork(templateType) {
-    if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas not supported");
-
-    const lines = getDeckGrid();
-
-    // 依據規格繪製
-    if (templateType === "black_front") {
-      canvas.width = 3500; canvas.height = 4500;
-      ctx.clearRect(0, 0, 3500, 4500); // 透明背景
-      ctx.textAlign = "center";
-      
-      // 主標
-      ctx.fillStyle = "#F5F5F0";
-      ctx.font = "600 110px 'Inter', 'Montserrat', sans-serif";
-      ctx.fillText("52! : THE ONLY MOMENT", 1750, 700);
-      
-      // 副標
-      ctx.fillStyle = "#C8C8C0";
-      ctx.font = "400 55px 'Inter', 'Montserrat', sans-serif";
-      ctx.fillText("A wearable record of a moment that will never happen again.", 1750, 850);
-      
-      // 牌序 (4行x13)
-      ctx.fillStyle = "#F5F5F0";
-      ctx.font = "400 65px 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif";
-      try { ctx.letterSpacing = "0.08em"; } catch {}
-      lines.forEach((line, i) => ctx.fillText(line, 1750, 1600 + i * 140));
-      try { ctx.letterSpacing = "0px"; } catch {}
-
-      // Signature
-      ctx.fillStyle = "#C8C8C0";
-      ctx.font = "500 60px 'IBM Plex Mono', 'Space Mono', monospace";
-      try { ctx.letterSpacing = "0.15em"; } catch {}
-      ctx.fillText(`SPACE-TIME SIGNATURE #${signature}`, 1750, 3600);
-
-      // 說明與網址
-      ctx.fillStyle = "#8C8C88";
-      ctx.font = "400 45px 'Inter', sans-serif";
-      try { ctx.letterSpacing = "0.05em"; } catch {}
-      ctx.fillText("Generated from one sequence among 8.06 × 10⁶⁷ possible arrangements.", 1750, 3750);
-      ctx.font = "400 35px 'Inter', sans-serif";
-      ctx.fillText("moment52.vercel.app", 1750, 4200);
-
-    } else if (templateType === "offwhite_front") {
-      canvas.width = 3500; canvas.height = 4500;
-      ctx.clearRect(0, 0, 3500, 4500);
-      ctx.textAlign = "center";
-      
-      ctx.fillStyle = "#222222";
-      ctx.font = "600 120px 'Inter', 'Space Grotesk', sans-serif";
-      try { ctx.letterSpacing = "0.2em"; } catch {}
-      ctx.fillText("THE ONLY MOMENT", 1750, 800);
-      
-      ctx.fillStyle = "#555555";
-      ctx.font = "400 60px 'Noto Sans TC', 'PingFang TC', sans-serif";
-      try { ctx.letterSpacing = "0.5em"; } catch {}
-      ctx.fillText("此刻唯一", 1750, 950);
-      
-      ctx.fillStyle = "#222222";
-      ctx.font = "400 65px 'IBM Plex Mono', monospace, sans-serif";
-      try { ctx.letterSpacing = "0.1em"; } catch {}
-      lines.forEach((line, i) => ctx.fillText(line, 1750, 1700 + i * 160));
-      
-      ctx.fillStyle = "#555555";
-      ctx.font = "500 55px 'IBM Plex Mono', monospace";
-      try { ctx.letterSpacing = "0.15em"; } catch {}
-      ctx.fillText(`SPACE-TIME SIGNATURE #${signature}`, 1750, 3600);
-      
-      ctx.fillStyle = "#222222";
-      ctx.font = "400 50px 'Inter', sans-serif";
-      try { ctx.letterSpacing = "0.05em"; } catch {}
-      ctx.fillText("This moment will never happen again.", 1750, 3750);
-      
-      ctx.fillStyle = "#8A8A8A";
-      ctx.font = "400 40px 'Inter', sans-serif";
-      ctx.fillText("One arrangement among 8.06 × 10⁶⁷ possibilities.", 1750, 3850);
+  // 營運端手動重新生成印刷檔
+  async function handleOperatorGenerate(colorType) {
+    if (!opDeckStr.trim() || !opSignature.trim()) return showToast("請完整填寫牌序與 Signature");
+    const arr = opDeckStr.split("·").map(s => s.trim()).filter(Boolean);
+    if (arr.length !== 52) showToast("⚠️ 警告：解析出的牌數不是 52 張，請檢查分隔符號");
+    
+    showToast("正在還原生產圖檔...");
+    try {
+      const cleanSig = opSignature.replace("#", "").trim();
+      const blob = await renderFactoryCanvas(`${colorType}_front`, arr, cleanSig);
+      downloadBlob(blob, `Manual-M52-${cleanSig.substring(0,8)}-front-${colorType}.png`);
+      showToast("生產圖檔已匯出");
+    } catch (err) {
+      showToast("生成失敗，請檢查格式");
     }
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/png");
-    });
   }
 
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // 處理訂單按鈕點擊：生成印刷檔案並前往 Google 表單
   async function handleOrderProcess(e) {
     if (!manifested) {
       e.preventDefault(); return showToast("請先觀照當下，顯化屬於您的片刻");
     }
     
-    setIsGenerating(true);
-    showToast("正在為您生成高解析印刷檔與 Artwork ID...");
     trackPixelEvent("ClickWearable", { signature, artworkId });
+    showToast("即將前往訂購表單...");
 
     try {
-      // 產出並打包前端圖檔，因手機限制，這裡實作順序下載
-      const blackFrontBlob = await generateFactoryArtwork("black_front");
-      const offWhiteFrontBlob = await generateFactoryArtwork("offwhite_front");
-      
+      // 嘗試在背景下載預覽備份，但不阻擋使用者前進
+      const blackFrontBlob = await renderFactoryCanvas("black_front", deck, signature);
       downloadBlob(blackFrontBlob, `${artworkId}-front-black.png`);
-      // 加上微小延遲防止瀏覽器阻擋
-      await new Promise(r => setTimeout(r, 400)); 
-      downloadBlob(offWhiteFrontBlob, `${artworkId}-front-offwhite.png`);
-      
-      setIsGenerating(false);
-      showToast("印刷圖檔已下載！即將開啟表單...");
-      
-      // 自動跳轉表單
-      setTimeout(() => {
-        window.open(googleFormUrl, "_blank");
-      }, 1500);
-
     } catch (err) {
-      setIsGenerating(false);
-      showToast("圖檔生成失敗，請使用電腦版瀏覽器操作");
+      // 忽略行動裝置阻擋錯誤，確保表單能順利開啟
     }
+
+    setTimeout(() => {
+      window.open(googleFormUrl, "_blank");
+    }, 800);
   }
 
-  // ----------------------------------------------------------------------------
-  // 社群分享圖卡 (氛圍感導向)
-  // ----------------------------------------------------------------------------
   async function exportSocialImage() {
     if (!manifested) return showToast("請先觀照當下");
     try {
@@ -574,7 +576,11 @@ export default function App() {
 
       <main className="relative flex min-h-screen items-center justify-center px-5 py-14">
         <section className="w-full max-w-[660px] text-center">
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500">
+          <motion.div 
+            onClick={handleSecretClick}
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} 
+            className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500 cursor-default select-none"
+          >
             每一次洗牌 · 皆是宇宙級的顯化
           </motion.div>
 
@@ -612,7 +618,7 @@ export default function App() {
               <span className="text-neutral-800">/</span>
               <button onClick={exportSocialImage} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Share2 className="h-3.5 w-3.5" /> 匯出分享圖卡</button>
               <span className="text-neutral-800">/</span>
-              <button onClick={() => setShowPortal(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Shirt className="h-3.5 w-3.5" /> 訂製此刻 T 恤</button>
+              <button onClick={() => setShowPortal(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Shirt className="h-3.5 w-3.5" /> 支持 & 訂製</button>
             </div>
           </div>
 
@@ -624,36 +630,93 @@ export default function App() {
         </section>
       </main>
 
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300 whitespace-nowrap">
-          {toast}
-        </div>
+      {/* 營運端隱藏面板 (Operator Mode) */}
+      {showOperator && (
+        <Modal onClose={() => setShowOperator(false)}>
+          <div className="pr-7">
+            <div className="mb-4 flex items-center gap-2 text-[0.72rem] uppercase tracking-[0.24em] text-emerald-500">
+              <Settings className="h-4 w-4" /> Operator Production Mode
+            </div>
+            <h2 className="mb-4 text-2xl font-light text-white">營運端生產中心</h2>
+            <p className="mb-4 text-xs font-light leading-6 text-neutral-400">
+              從 Google 表單複製訂單對應的「牌序」與「Signature」貼入下方，即可重新還原 300DPI 生產圖檔，免除前端設備遺失檔案的風險。
+            </p>
+            <div className="mb-4 space-y-4">
+              <div>
+                <label className="mb-2 block text-xs text-neutral-500">完整牌序 (以 · 分隔)</label>
+                <textarea 
+                  value={opDeckStr} onChange={(e) => setOpDeckStr(e.target.value)}
+                  className="w-full h-24 bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm focus:border-emerald-500 outline-none"
+                  placeholder="例：♠A · ♥7 · ♦Q ..."
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs text-neutral-500">完整 Signature</label>
+                <input 
+                  type="text" value={opSignature} onChange={(e) => setOpSignature(e.target.value)}
+                  className="w-full bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm focus:border-emerald-500 outline-none"
+                  placeholder="例：A9F2C84D12E0B7F1"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => handleOperatorGenerate("black")} className="flex-1 bg-white/[0.05] border border-white/20 p-3 text-xs text-white hover:bg-white/10 transition">輸出黑 T 正面</button>
+              <button onClick={() => handleOperatorGenerate("offwhite")} className="flex-1 bg-white/[0.05] border border-white/20 p-3 text-xs text-white hover:bg-white/10 transition">輸出米白 T 正面</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 52! 冷數據面板修復歸位 */}
+      {showMath && (
+        <Modal onClose={() => setShowMath(false)}>
+          <div className="pr-7">
+            <div className="mb-5 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">The Mathematical Shock</div>
+            <h2 className="mb-5 text-2xl font-light text-white">52! 的冷數據</h2>
+            <p className="mb-5 text-sm font-light leading-8 text-neutral-400">
+              52 張不同的牌排成一列，第一張有 52 種可能，第二張剩 51 種，第三張剩 50 種，直到最後一張。全部相乘，就是 52!。
+            </p>
+            <div className="mb-5 break-words border border-white/[0.06] bg-white/[0.02] p-4 font-mono text-xs leading-7 text-neutral-500">
+              {FACTORIAL_FULL}
+            </div>
+            <div className="space-y-3 text-sm font-light leading-7 text-neutral-500">
+              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>宇宙年齡</span><span className="text-neutral-300">約 138 億年</span></div>
+              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>宇宙誕生至今秒數</span><span className="text-neutral-300">約 4.35 × 10¹⁷ 秒</span></div>
+              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>52 張牌完整排列</span><span className="text-neutral-300">約 8.06 × 10⁶⁷ 種</span></div>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {showPortal && (
         <Modal onClose={() => setShowPortal(false)}>
           <div className="pr-7">
             <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">Custom Wearable & Production</div>
-            <h2 className="mb-4 text-2xl font-light text-white">訂製這一刻的 T 恤｜NT$1,280</h2>
+            <h2 className="mb-4 text-2xl font-light text-white">建立連接：時空書籤與客製 T 恤</h2>
             <p className="mb-4 text-sm font-light leading-7 text-neutral-400">
-              系統將依據您專屬的 <b>Artwork ID: {manifested ? artworkId : "尚未顯化"}</b> 自動產生符合工廠規格的高解析度去背印刷檔，並導引您至表單填寫收件資訊。
+              免費模式提供因緣顯化觀照。若此片刻深深觸動你，可進入訂製通道，將當下牌序、金句、哈希簽章永久刻印。
             </p>
 
             <div className="mb-5 space-y-3 rounded bg-white/[0.02] border border-white/[0.05] p-4 text-[0.78rem] leading-6 text-neutral-500">
-              <div><span className="text-neutral-400">【生產與版權聲明】</span> 點擊按鈕後，瀏覽器將自動為您下載「黑 T」與「米白 T」的高解析度印刷原檔，同時開啟表單。請於表單內確認您的款式與尺寸。</div>
+              <div><span className="text-neutral-400">【生產與版權聲明】</span> 系統將產生正面印刷原檔供您留存備份，同時引導您進入表單。請於表單內確認您的款式與尺寸。客製商品不適用七天鑑賞期退換貨。</div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={handleOrderProcess}
-                disabled={isGenerating}
-                className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
               >
-                {isGenerating ? "正在生成高解析圖檔..." : "下載印刷原檔並前往訂購表單"}
+                進入訂製表單 (系統將為您備份印刷原檔)
               </button>
             </div>
           </div>
         </Modal>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300 whitespace-nowrap">
+          {toast}
+        </div>
       )}
     </div>
   );
