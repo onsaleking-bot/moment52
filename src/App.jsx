@@ -560,7 +560,7 @@ export default function App() {
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-neutral-600">
                     <img 
-                      src={`/mockup-${activeImage}.png`} 
+                      src={`/mockup-${activeImage}.png.png`} 
                       alt={`Mockup ${activeImage}`} 
                       className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
                       onError={(e) => {
@@ -594,7 +594,7 @@ export default function App() {
                           {imgType === 'female' && (lang === 'zh' ? '女模穿著' : 'Female')}
                           {imgType === 'detail' && (lang === 'zh' ? '細節圖' : 'Detail')}
                         </span>
-                        <img src={`/mockup-${imgType}.png`} alt={imgType} className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale" onError={(e) => e.target.style.display = 'none'} />
+                        <img src={`/mockup-${imgType}.png.png`} alt={imgType} className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale" onError={(e) => e.target.style.display = 'none'} />
                       </>
                     )}
                   </button>
