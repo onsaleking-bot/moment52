@@ -2,17 +2,19 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bookmark,
-  Download,
-  Heart,
-  Infinity,
+  Infinity as InfinityIcon,
   Share2,
   Volume2,
   VolumeX,
   X,
   Shirt,
   Settings,
+  Menu
 } from "lucide-react";
 
+// ============================================================================
+// 1. 核心配置與常數
+// ============================================================================
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
@@ -20,6 +22,7 @@ const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`))
 const STORAGE_KEYS = {
   bookmarks: "moment52_bookmarks",
   sound: "moment52_sound",
+  lang: "moment52_lang"
 };
 
 const GOOGLE_FORM_CONFIG = {
@@ -31,7 +34,15 @@ const GOOGLE_FORM_CONFIG = {
   entryArtworkId: "entry.1489093389", 
 };
 
-const QUOTES = [
+const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
+const FACTORIAL_FULL = "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
+
+let sharedAudioContext = null;
+
+// ============================================================================
+// 2. 文本與多語系資料
+// ============================================================================
+const QUOTES_ZH = [
   "雨，只是雨。沉默，只是沉默。眼前的牌，也只是此時此刻的因緣和合。",
   "這一組排列，是高達 52! 的宇宙機率在這一秒的凝聚。它來了，然後它就會散去。",
   "任何強烈浮現的現象，本質上都只是機率波在當下的一次微弱震盪。",
@@ -41,114 +52,102 @@ const QUOTES = [
   "也許人生本來就不是為了得到答案，而是學會不帶評判地觀看。",
   "這一刻的喧囂或寂靜，在漫長的時間軸裡，都只是由無數隨機參數交織出的微小訊號。",
   "你感覺到的那些內耗與痛苦，幕後其實只是大腦部門在處理衝突時的摩擦力。你，不是那個衝突。",
-  "大腦裡根本沒有總司令。那個感到掙扎的自我，不過是系統出錯時臨時喚醒的除錯機制。",
-  "放下對主宰權的焦慮。承認吧，我們從來就不是自己以為的那個主控者。",
   "任何迎面而來的焦慮、拖延與愧疚，都只是低階代理人之間的訊號延遲。冷靜地看著它，它就會大解離。",
   "自我是一個功能，而非一個實體。當系統不再內耗，這個救火隊員自然會退場。",
   "你不需要對每一個隨機產出的結果負責，但你必須對此時此刻寫下的意圖負責。",
-  "任何試圖用過去經驗來導航當下的行為，都會在系統底層產生巨大的摩擦力。",
-  "不要試圖成為掌控一切的執行者；在宇宙的盲盒前，你只是負責設定邊界的管家。",
   "當系統接管了做，你終於可以開始活。不要急著逃離這一刻。",
-  "行動可以外包，人設可以委託，但此時此刻的後設覺察，是不可替代的最後堡壘。",
-  "停止在腦袋裡拼命生產無意義的故事。退回董事會的席次，當一個純粹的見證者。",
-  "真正重要的，從來不是在時空中留下了什麼，而是有沒有在有限的格子裡，盡可能誠實地活過。",
-  "誠實地體驗眼前的這一刻吧，因為它在宇宙歷史中幾乎不可能重複。",
-  "任何涉及邏輯與規劃的煩瑣小事，都交給 Level 2 的世界去運算。你的注意力，應該屬於純粹的覺知。",
-  "撕掉社會人設的標籤。當行為被層層外包，螢幕另一端剩下的，才是你真正的本體。",
-  "現象本身沒有好壞，所有的定義都是大腦新皮層的加工。回到最底層的見證，此時此刻，一切具足。",
-  "不要急著抵達下一刻，這一刻已經完整。",
-  "牌已經落下，念頭才剛開始替它編故事。",
-  "所謂命運，也許只是因緣在某一秒排列成你看見的樣子。",
-  "你不是被這一刻困住，你只是還沒真正進入這一刻。",
-  "這一刻沒有重播鍵，所以值得被完整看見。",
-  "當你停止逃離，當下才開始向你顯現。",
-  "宇宙沒有重複洗出同一個你。",
-  "不要把此刻變成下一個焦慮的入口。",
-  "你正在看見的，不只是牌，是因緣的暫時形狀。",
-  "完整不是未來的獎賞，而是當下的事實。",
-  "心安靜時，任何排列都像宇宙的簽名。",
-  "不是每一刻都有答案，但每一刻都是真的。",
-  "放下解釋，事情就回到它原本的樣子。",
-  "你此刻的呼吸，也是一組不會重來的排列。",
-  "別急著判斷，先看見。",
-  "世界不是為了你的故事而發生，它只是發生。",
-  "當下不是口號，是你唯一真正擁有的座標。",
-  "你看見牌，也看見自己正在觀看。",
-  "每一次洗牌，都是一次小型宇宙誕生。",
-  "沒有哪一張牌是錯的，它只是落在那裡。",
-  "真正的自由，是不再被自己的詮釋綁架。",
-  "此刻不需要被美化，它只需要被經驗。",
-  "你不是要控制宇宙，只是要醒來看見它。",
-  "萬物排列，心也排列；覺察，是看見排列的人。",
-  "這一秒不會回來，所以不用把它浪費在後悔裡。",
-  "你以為你在等未來，其實生命只在現在開門。",
-  "牌沒有預言你，牌只是提醒你回來。",
-  "當下不是靜止，而是所有因緣正在流動。",
-  "你不是缺少答案，你只是離此刻太遠。",
-  "一副牌洗出宇宙，一個念頭洗出人生。",
-  "今天的排列，不需要和昨天相同。你也是。",
-  "別讓一個念頭替整個宇宙下結論。",
-  "有些事只是發生，不需要立刻變成意義。",
-  "此刻已經抵達，不必再追。",
-  "每一張牌都沒有中心，卻共同形成一個完整。",
-  "你不是牌面，你是看見牌面的人。",
-  "真正的醒來，是把故事還給故事，把事實還給事實。",
-  "萬物皆在排列，而你正在其中呼吸。",
-  "這一刻的你，不是錯誤版本。",
-  "不要等待神聖降臨，普通的此刻就是入口。",
-  "宇宙沒有暫停，但你可以停止追逐。",
-  "如果此刻唯一，就不必急著把它變成別的東西。",
-  "你的心若安靜，隨機也會顯得莊嚴。",
-  "每一次看見，都是一次出生。",
-  "別把短暫誤認為無價值，正因短暫，所以珍貴。",
-  "你無法重洗人生，但可以重新觀看。",
-  "這組牌沒有目的，卻完整呈現。你也可以如此。",
-  "當下不是被抓住的東西，而是被覺察的流動。",
-  "不要急著解釋牌局，先感受你還在呼吸。",
-  "在無限排列中，這一刻選擇了出現。",
-  "生命不是等待翻出好牌，而是看見每一張都在成全此刻。",
-  "偶然不是混亂，它是因緣暫時沒有被你看懂。",
-  "你看見的每一張牌，都已經穿越了無數不可能。",
-  "沒有一刻是多餘的，只有尚未被完整看見的片刻。",
-  "宇宙很大，但入口常常只是一次呼吸。",
-  "你不需要成為更好的自己，才能回到現在。",
-  "這一刻不要求你完美，只要求你在場。",
-  "隨機不是沒有意義，而是拒絕被單一故事關住。",
-  "當你停止抗拒，世界開始如實。",
-  "牌序不解釋自己，雲也不解釋天空。",
-  "你正在經驗的不是普通一秒，而是唯一一秒。",
-  "此刻不是通往未來的走廊，它本身就是房間。",
-  "不要用昨日的劇本，綁架今日的排列。",
-  "宇宙給你的不是答案，而是一個正在發生的現在。",
-  "有時候，清醒只是少編一點故事。",
-  "你以為世界亂，其實是心急著要排序。",
-  "一切都在變，所以此刻才值得溫柔對待。",
-  "牌組會散，念頭會散，覺察仍在。",
-  "你不必贏過此刻，只要進入此刻。",
-  "每一次排列都在提醒你：沒有任何一刻是複製品。",
-  "把注意力帶回來，宇宙就在這裡。",
-  "命運不是寫在牌上，而是你如何觀看牌。",
-  "當你不再追問為什麼是這樣，這樣本身就開始說話。",
-  "存在不是抽象概念，是你此刻正在讀這句話。",
-  "你不是來到這一刻，你一直只能在這一刻。",
-  "不要讓恐懼替未來洗牌。",
-  "當下的力量，不在宏大，而在不可重複。",
-  "這一秒不是過渡，它是完整的一生。",
-  "所有遙遠的宇宙，最後都落在你眼前這一秒。",
+  "真正重要的，從來不是在時空中留下了什麼，而是有沒有在有限的格子裡，盡可能誠實地活過。"
 ];
 
-const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
-const FACTORIAL_FULL =
-  "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
+const QUOTES_EN = [
+  "Rain is just rain. Silence is just silence. These cards are just the convergence of conditions in this exact moment.",
+  "This specific arrangement is a manifestation of 52! probability in a single second. It arrives, and then it scatters.",
+  "Any intense phenomenon is fundamentally just a subtle vibration of probability waves in the present moment.",
+  "Things are happening. Phenomena are manifesting. You don't need to fix it; you only need to witness it.",
+  "The universe has no stories. Stories are narratives added by the rational brain to make itself feel secure.",
+  "Perhaps life is not about finding answers, but learning to observe without judgment.",
+  "The noise or silence of this moment is merely a tiny signal woven from countless random parameters.",
+  "The internal friction and pain you feel are just processing delays between low-level agents. Observe it calmly, and it disentangles.",
+  "The 'self' is a function, not an entity. When the system stops fighting itself, the firefighter naturally steps down.",
+  "When systems take over the 'doing', you can finally begin 'being'. Don't rush to escape this moment.",
+  "What truly matters is not what you leave behind in space-time, but whether you have lived as honestly as possible within your finite grid."
+];
 
-let sharedAudioContext = null;
+const DICT = {
+  zh: {
+    nav_home: "首頁",
+    nav_texts: "思想摘錄",
+    nav_partners: "合作提案",
+    hero_title: "每一次洗牌 · 皆是宇宙級的顯化",
+    hero_init: "點擊下方，見證此刻唯一的因緣顯化",
+    btn_manifest: "觀照當下",
+    btn_bookmark: "時空書籤",
+    btn_share: "匯出分享圖卡",
+    btn_order: "訂製此刻 T 恤",
+    math_desc: `52 張牌，有 52! 種排列。大約是 ${FACTORIAL_SHORT}。\n每一次完整的洗牌，都極大機率是宇宙 138 億年歷史中從未出現，未來也不會再重複的一組排列。\n\n這不是占卜，也不是賭博。\n這是一個提醒：你正在經驗的這一秒，不是普通的一秒，而是宇宙中不會重來的片刻。`,
+    toast_wait: "請先觀照當下",
+    toast_bookmark: "此刻已刻印為時空書籤",
+    portal_title: "建立連接：客製 T 恤",
+    portal_desc: "將此片刻的牌序、金句、哈希簽章永久刻印，轉化為實體存在。",
+    portal_notice: "系統已為此刻建立 Artwork ID。請進入表單填寫尺寸、款式與收件資料。營運端將依據表單中的牌序與 Signature 重新產生工廠印刷圖檔。客製商品不適用七天鑑賞期退換貨。",
+    portal_btn: "前往訂製表單 (NT$1,280)"
+  },
+  en: {
+    nav_home: "Home",
+    nav_texts: "Texts Behind",
+    nav_partners: "For Partners",
+    hero_title: "Every shuffle is a cosmic-level manifestation",
+    hero_init: "Click below to witness the unique manifestation of this moment",
+    btn_manifest: "Manifest Now",
+    btn_bookmark: "Bookmark",
+    btn_share: "Share Card",
+    btn_order: "Order T-Shirt",
+    math_desc: `52 cards, 52! permutations. Approximately ${FACTORIAL_SHORT}.\nEvery complete shuffle is a sequence that has likely never occurred in the 13.8 billion years of cosmic history, and will never repeat.\n\nThis is not fortune-telling or gambling.\nIt is a reminder: the second you are experiencing is not ordinary; it is a moment in the universe that will never return.`,
+    toast_wait: "Please manifest a moment first",
+    toast_bookmark: "Moment bookmarked",
+    portal_title: "Establish Connection: Custom T-Shirt",
+    portal_desc: "Permanently imprint the sequence, quote, and hash signature of this moment into physical existence.",
+    portal_notice: "An Artwork ID has been generated for this moment. Please enter the form to fill in your size and shipping details. The operation team will regenerate the factory artwork based on your sequence. Custom items are non-refundable.",
+    portal_btn: "Go to Order Form"
+  }
+};
 
+const BILINGUAL_TEXTS = [
+  {
+    id: 1,
+    zh_title: "我們都是機率波",
+    en_title: "We Are Probability Waves",
+    zh_content: "世界不是固定的物體，而是因緣、觀看與機率暫時收束出的現象。每一次洗牌，都像一次微型宇宙的顯化。量子力學中的觀察者效應告訴我們：未被觀察的世界是機率波，而你的意識，是讓其塌縮成現實的開關。你的每一次凝視，都是一次宇宙的自拍。",
+    en_content: "The world is not a fixed object, but a phenomenon temporarily collapsed by conditions, observation, and probability. Every shuffle is the manifestation of a micro-universe. Unobserved reality remains a probability wave; your consciousness is the switch that collapses it into reality. Every gaze is the universe taking a selfie."
+  },
+  {
+    id: 2,
+    zh_title: "大解離",
+    en_title: "The Great Disentanglement",
+    zh_content: "當 AI 接管了「做」，人類真正不能外包的，是觀看、選擇與承擔。這個網站不是工具，而是一次把「活」放回中心的練習。執行正在被系統性地外包；而存在無法被外包。當行動被代理，真正重要的不再是如何做，而是你是否能純粹地、不帶摩擦地活著。",
+    en_content: "When AI takes over 'doing', what humans truly cannot outsource is observing, choosing, and bearing consequence. This site is not a tool, but an exercise in putting 'being' back at the center. Execution is systematically outsourced; existence cannot be. When action is delegated, what matters is living purely, without friction."
+  },
+  {
+    id: 3,
+    zh_title: "僧侶 CEO",
+    en_title: "The Monk CEO",
+    zh_content: "不是更努力，而是降低內耗。當所有行動都被優化，真正重要的是你的系統是否還有一個安靜的後台。意志力不是蠻力，它是清理雜訊後的物理現象。真正的現實扭曲，不是靠施加壓力，而是靠移除阻力。不是做更多，而是刪除 99% 的平庸選項。",
+    en_content: "It is not about trying harder, but reducing internal friction. When all actions are optimized, what matters is whether your system still has a quiet backend. Willpower is not brute force; it's a physical phenomenon after clearing the noise. True reality distortion relies on removing resistance, not applying pressure. Delete 99% of mediocre options."
+  },
+  {
+    id: 4,
+    zh_title: "關係的結構",
+    en_title: "The Structure of Relationships",
+    zh_content: "關係不是可以擁有的東西，而是條件暫時聚合的事件。就像一組牌序，來了，顯現，然後散去。最大的自由，是不再需要透過關係來證明什麼。停止像蓋城堡一樣去經營關係，開始像衝浪一樣去經歷關係。來去之間，只是一場純粹的見證。",
+    en_content: "A relationship is not an object to be owned, but an event of conditions temporarily converging. Like a sequence of cards, it arrives, manifests, and scatters. The greatest freedom is no longer needing relationships to prove anything. Stop managing relationships like building castles; start experiencing them like surfing."
+  }
+];
+
+// ============================================================================
+// 3. 工具與共用函式
+// ============================================================================
 function isBrowser() { return typeof window !== "undefined"; }
-
-function isLineBrowser() {
-  if (!isBrowser()) return false;
-  return /Line/i.test(navigator.userAgent);
-}
+function isLineBrowser() { return isBrowser() && /Line/i.test(navigator.userAgent); }
 
 function trackPixelEvent(eventName, params = {}) {
   if (isBrowser() && window.fbq) {
@@ -158,64 +157,51 @@ function trackPixelEvent(eventName, params = {}) {
 
 function loadStoredBoolean(key, fallback = false) {
   if (!isBrowser()) return fallback;
-  try {
-    const value = window.localStorage.getItem(key);
-    return value === null ? fallback : value === "true";
-  } catch { return fallback; }
+  try { const val = window.localStorage.getItem(key); return val === null ? fallback : val === "true"; } catch { return fallback; }
 }
 
 function loadStoredJson(key, fallback) {
   if (!isBrowser()) return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : fallback;
-  } catch { return fallback; }
+  try { const val = window.localStorage.getItem(key); return val ? JSON.parse(val) : fallback; } catch { return fallback; }
 }
 
 function saveToStorage(key, value) {
   if (!isBrowser()) return;
-  try {
-    window.localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
-  } catch {}
+  try { window.localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value)); } catch {}
 }
 
-function secureRandomInt(maxExclusive) {
-  if (maxExclusive <= 0) return 0;
+function secureRandomInt(max) {
+  if (max <= 0) return 0;
   if (isBrowser() && window.crypto?.getRandomValues) {
     const array = new Uint32Array(1);
-    const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
+    const limit = Math.floor(0xffffffff / max) * max;
     let value;
-    do {
-      window.crypto.getRandomValues(array);
-      value = array[0];
-    } while (value >= limit);
-    return value % maxExclusive;
+    do { window.crypto.getRandomValues(array); value = array[0]; } while (value >= limit);
+    return value % max;
   }
-  return Math.floor(Math.random() * maxExclusive);
+  return Math.floor(Math.random() * max);
 }
 
 function shuffleDeck() {
   const deck = [...BASE_DECK];
-  for (let i = deck.length - 1; i > 0; i -= 1) {
+  for (let i = deck.length - 1; i > 0; i--) {
     const j = secureRandomInt(i + 1);
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
 }
 
-function randomQuote() {
-  return QUOTES[secureRandomInt(QUOTES.length)];
+function randomQuote(lang) {
+  const quotes = lang === 'en' ? QUOTES_EN : QUOTES_ZH;
+  return quotes[secureRandomInt(quotes.length)];
 }
 
 function createSignature(deck) {
   const text = deck.join("");
   let hash = 0xcbf29ce484222325n;
-  const prime = 0x100000001b3n;
-  for (let i = 0; i < text.length; i += 1) {
+  for (let i = 0; i < text.length; i++) {
     hash ^= BigInt(text.charCodeAt(i));
-    hash = BigInt.asUintN(64, hash * prime);
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
   }
   return hash.toString(16).toUpperCase().padStart(16, "0");
 }
@@ -229,10 +215,8 @@ function formatTime(date) {
 
 function getYYYYMMDD(dateObj) {
   const d = dateObj || new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}${month}${day}`;
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
 }
 
 async function playSingingBowl() {
@@ -243,65 +227,46 @@ async function playSingingBowl() {
     const ctx = sharedAudioContext;
     if (ctx.state === "suspended") await ctx.resume();
     
-    const osc = ctx.createOscillator();
-    const overtone = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-
+    const osc = ctx.createOscillator(), overtone = ctx.createOscillator(), gain = ctx.createGain(), filter = ctx.createBiquadFilter();
     osc.type = "sine"; overtone.type = "sine";
     osc.frequency.setValueAtTime(144, ctx.currentTime);
     overtone.frequency.setValueAtTime(288, ctx.currentTime);
     filter.type = "lowpass"; filter.frequency.setValueAtTime(700, ctx.currentTime);
-
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 3.6);
-
-    osc.connect(filter); overtone.connect(filter);
-    filter.connect(gain); gain.connect(ctx.destination);
-
-    osc.start(); overtone.start();
-    osc.stop(ctx.currentTime + 3.7); overtone.stop(ctx.currentTime + 3.7);
+    osc.connect(filter); overtone.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    osc.start(); overtone.start(); osc.stop(ctx.currentTime + 3.7); overtone.stop(ctx.currentTime + 3.7);
   } catch {}
 }
 
 function splitText(ctx, text, maxWidth) {
-  const chars = text.split("");
-  const lines = [];
+  const chars = text.split(""), lines = [];
   let current = "";
-  chars.forEach((char) => {
-    if (ctx.measureText(current + char).width > maxWidth && current) {
-      lines.push(current);
-      current = char;
-    } else {
-      current += char;
-    }
+  chars.forEach((c) => {
+    if (ctx.measureText(current + c).width > maxWidth && current) { lines.push(current); current = c; }
+    else { current += c; }
   });
   if (current) lines.push(current);
   return lines;
 }
 
-function Modal({ children, onClose }) {
+function Modal({ children, onClose, maxWidth = "max-w-xl" }) {
   useEffect(() => {
-    const handleKeyDown = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const hk = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", hk);
+    return () => window.removeEventListener("keydown", hk);
   }, [onClose]);
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-md"
-        role="dialog" aria-modal="true"
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-md" role="dialog"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          className="relative max-h-[88vh] w-full max-w-xl overflow-y-auto border border-white/10 bg-black p-7 text-left text-neutral-300 shadow-2xl"
+        <motion.div initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          className={`relative max-h-[88vh] w-full ${maxWidth} overflow-y-auto border border-white/10 bg-black p-7 text-left text-neutral-300 shadow-2xl`}
         >
-          <button onClick={onClose} className="absolute right-4 top-4 text-neutral-500 transition hover:text-white" aria-label="關閉">
-            <X className="h-5 w-5" />
-          </button>
+          <button onClick={onClose} className="absolute right-4 top-4 text-neutral-500 hover:text-white"><X className="h-5 w-5" /></button>
           {children}
         </motion.div>
       </motion.div>
@@ -309,113 +274,61 @@ function Modal({ children, onClose }) {
   );
 }
 
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
 async function renderFactoryCanvas(templateType, targetDeckArr, targetSignature) {
   if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas not supported");
+  const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+  const lines = [targetDeckArr.slice(0, 13).join(" · "), targetDeckArr.slice(13, 26).join(" · "), targetDeckArr.slice(26, 39).join(" · "), targetDeckArr.slice(39, 52).join(" · ")];
 
-  const lines = [
-    targetDeckArr.slice(0, 13).join(" · "),
-    targetDeckArr.slice(13, 26).join(" · "),
-    targetDeckArr.slice(26, 39).join(" · "),
-    targetDeckArr.slice(39, 52).join(" · ")
-  ];
-
+  canvas.width = 3500; canvas.height = 4500; ctx.clearRect(0, 0, 3500, 4500); ctx.textAlign = "center";
+  
   if (templateType === "black_front") {
-    canvas.width = 3500; canvas.height = 4500;
-    ctx.clearRect(0, 0, 3500, 4500); 
-    ctx.textAlign = "center";
-    
-    ctx.fillStyle = "#F5F5F0";
-    ctx.font = "600 110px 'Inter', 'Montserrat', sans-serif";
-    ctx.fillText("52! : THE ONLY MOMENT", 1750, 700);
-    
-    ctx.fillStyle = "#C8C8C0";
-    ctx.font = "400 55px 'Inter', 'Montserrat', sans-serif";
-    ctx.fillText("A wearable record of a moment that will never happen again.", 1750, 850);
-    
-    ctx.fillStyle = "#F5F5F0";
-    ctx.font = "400 65px 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif";
-    try { ctx.letterSpacing = "0.08em"; } catch {}
-    lines.forEach((line, i) => ctx.fillText(line, 1750, 1600 + i * 140));
-    try { ctx.letterSpacing = "0px"; } catch {}
-
-    ctx.fillStyle = "#C8C8C0";
-    ctx.font = "500 60px 'IBM Plex Mono', 'Space Mono', monospace";
-    try { ctx.letterSpacing = "0.15em"; } catch {}
-    ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
-
-    ctx.fillStyle = "#8C8C88";
-    ctx.font = "400 45px 'Inter', sans-serif";
-    try { ctx.letterSpacing = "0.05em"; } catch {}
-    ctx.fillText("Generated from one sequence among 8.06 × 10⁶⁷ possible arrangements.", 1750, 3750);
-    ctx.font = "400 35px 'Inter', sans-serif";
-    ctx.fillText("moment52.vercel.app", 1750, 4200);
-
-  } else if (templateType === "offwhite_front") {
-    canvas.width = 3500; canvas.height = 4500;
-    ctx.clearRect(0, 0, 3500, 4500);
-    ctx.textAlign = "center";
-    
-    ctx.fillStyle = "#222222";
-    ctx.font = "600 120px 'Inter', 'Space Grotesk', sans-serif";
-    try { ctx.letterSpacing = "0.2em"; } catch {}
-    ctx.fillText("THE ONLY MOMENT", 1750, 800);
-    
-    ctx.fillStyle = "#555555";
-    ctx.font = "400 60px 'Noto Sans TC', 'PingFang TC', sans-serif";
-    try { ctx.letterSpacing = "0.5em"; } catch {}
-    ctx.fillText("此刻唯一", 1750, 950);
-    
-    ctx.fillStyle = "#222222";
-    ctx.font = "400 65px 'IBM Plex Mono', monospace, sans-serif";
-    try { ctx.letterSpacing = "0.1em"; } catch {}
-    lines.forEach((line, i) => ctx.fillText(line, 1750, 1700 + i * 160));
-    
-    ctx.fillStyle = "#555555";
-    ctx.font = "500 55px 'IBM Plex Mono', monospace";
-    try { ctx.letterSpacing = "0.15em"; } catch {}
-    ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
-    
-    ctx.fillStyle = "#222222";
-    ctx.font = "400 50px 'Inter', sans-serif";
-    try { ctx.letterSpacing = "0.05em"; } catch {}
-    ctx.fillText("This moment will never happen again.", 1750, 3750);
-    
-    ctx.fillStyle = "#8A8A8A";
-    ctx.font = "400 40px 'Inter', sans-serif";
-    ctx.fillText("One arrangement among 8.06 × 10⁶⁷ possibilities.", 1750, 3850);
+    ctx.fillStyle = "#F5F5F0"; ctx.font = "600 110px 'Inter', sans-serif"; ctx.fillText("52! : THE ONLY MOMENT", 1750, 700);
+    ctx.fillStyle = "#C8C8C0"; ctx.font = "400 55px 'Inter', sans-serif"; ctx.fillText("A wearable record of a moment that will never happen again.", 1750, 850);
+    ctx.fillStyle = "#F5F5F0"; ctx.font = "400 65px 'IBM Plex Mono', monospace"; lines.forEach((l, i) => ctx.fillText(l, 1750, 1600 + i * 140));
+    ctx.fillStyle = "#C8C8C0"; ctx.font = "500 60px 'IBM Plex Mono', monospace"; ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
+    ctx.fillStyle = "#8C8C88"; ctx.font = "400 45px 'Inter', sans-serif"; ctx.fillText("Generated from one sequence among 8.06 × 10⁶⁷ possible arrangements.", 1750, 3750);
+    ctx.font = "400 35px 'Inter', sans-serif"; ctx.fillText("moment52.vercel.app", 1750, 4200);
+  } else {
+    ctx.fillStyle = "#222222"; ctx.font = "600 120px 'Inter', sans-serif"; ctx.fillText("THE ONLY MOMENT", 1750, 800);
+    ctx.fillStyle = "#555555"; ctx.font = "400 60px 'Noto Sans TC', sans-serif"; ctx.fillText("此刻唯一", 1750, 950);
+    ctx.fillStyle = "#222222"; ctx.font = "400 65px 'IBM Plex Mono', monospace"; lines.forEach((l, i) => ctx.fillText(l, 1750, 1700 + i * 160));
+    ctx.fillStyle = "#555555"; ctx.font = "500 55px 'IBM Plex Mono', monospace"; ctx.fillText(`SPACE-TIME SIGNATURE #${targetSignature}`, 1750, 3600);
+    ctx.fillStyle = "#222222"; ctx.font = "400 50px 'Inter', sans-serif"; ctx.fillText("This moment will never happen again.", 1750, 3750);
+    ctx.fillStyle = "#8A8A8A"; ctx.font = "400 40px 'Inter', sans-serif"; ctx.fillText("One arrangement among 8.06 × 10⁶⁷ possibilities.", 1750, 3850);
   }
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/png");
-  });
+  return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/png"));
 }
 
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
+// ============================================================================
+// 4. 主要應用元件
+// ============================================================================
 export default function App() {
+  const [lang, setLang] = useState(() => {
+    if (isBrowser()) return window.localStorage.getItem(STORAGE_KEYS.lang) || "zh";
+    return "zh";
+  });
+  const [view, setView] = useState("home"); // 'home', 'texts', 'partners'
+
   const [deck, setDeck] = useState(() => shuffleDeck());
-  const [quote, setQuote] = useState("點擊下方，見證此刻唯一的因緣顯化。");
+  const [quote, setQuote] = useState(DICT[lang].hero_init);
   const [time, setTime] = useState(null);
   const [manifested, setManifested] = useState(false);
   const [fading, setFading] = useState(false);
   
-  const [showMath, setShowMath] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
   const [showOperator, setShowOperator] = useState(false);
   const [toast, setToast] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const toastTimerRef = useRef(null);
   const manifestTimerRef = useRef(null);
-  const operatorClickCount = useRef(0);
+  const opClicks = useRef(0);
+  const t = DICT[lang];
 
   const [soundEnabled, setSoundEnabled] = useState(() => loadStoredBoolean(STORAGE_KEYS.sound, true));
   const [bookmarks, setBookmarks] = useState(() => loadStoredJson(STORAGE_KEYS.bookmarks, []));
@@ -424,10 +337,7 @@ export default function App() {
   const [opSignature, setOpSignature] = useState("");
 
   const signature = useMemo(() => createSignature(deck), [deck]);
-  
-  const artworkId = useMemo(() => {
-    return `M52-${getYYYYMMDD(time)}-${signature.substring(0, 8)}`;
-  }, [signature, time]);
+  const artworkId = useMemo(() => `M52-${getYYYYMMDD(time)}-${signature.substring(0, 8)}`, [signature, time]);
 
   const googleFormUrl = useMemo(() => {
     if (!manifested) return "#";
@@ -442,269 +352,256 @@ export default function App() {
 
   useEffect(() => { saveToStorage(STORAGE_KEYS.bookmarks, bookmarks); }, [bookmarks]);
   useEffect(() => { saveToStorage(STORAGE_KEYS.sound, String(soundEnabled)); }, [soundEnabled]);
+  useEffect(() => { saveToStorage(STORAGE_KEYS.lang, lang); }, [lang]);
   useEffect(() => {
     trackPixelEvent("ViewContent");
-    return () => {
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-      if (manifestTimerRef.current) window.clearTimeout(manifestTimerRef.current);
-    };
+    return () => { clearTimeout(toastTimerRef.current); clearTimeout(manifestTimerRef.current); };
   }, []);
 
-  function showToast(message) {
-    setToast(message);
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(""), 2500);
+  // Update initial quote if not manifested when language changes
+  useEffect(() => { if (!manifested) setQuote(DICT[lang].hero_init); }, [lang, manifested]);
+
+  function showToast(msg) {
+    setToast(msg);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(""), 2500);
   }
 
   function handleSecretClick() {
-    operatorClickCount.current += 1;
-    if (operatorClickCount.current >= 5) {
-      setShowOperator(true);
-      operatorClickCount.current = 0;
-    }
-    setTimeout(() => { operatorClickCount.current = 0; }, 2000);
+    opClicks.current += 1;
+    if (opClicks.current >= 5) { setShowOperator(true); opClicks.current = 0; }
+    setTimeout(() => { opClicks.current = 0; }, 2000);
   }
 
   function manifestNow() {
     if (soundEnabled) void playSingingBowl();
     setFading(true);
-    if (manifestTimerRef.current) window.clearTimeout(manifestTimerRef.current);
-
-    manifestTimerRef.current = window.setTimeout(() => {
-      const newDeck = shuffleDeck();
-      const newQuote = randomQuote();
-      setDeck(newDeck); setQuote(newQuote); setTime(new Date());
-      setManifested(true); setFading(false);
+    clearTimeout(manifestTimerRef.current);
+    manifestTimerRef.current = setTimeout(() => {
+      const newDeck = shuffleDeck(); const newQuote = randomQuote(lang);
+      setDeck(newDeck); setQuote(newQuote); setTime(new Date()); setManifested(true); setFading(false);
       trackPixelEvent("ManifestMoment", { signature: createSignature(newDeck), quote: newQuote });
     }, 320);
   }
 
   function bookmarkNow() {
-    if (!manifested) return showToast("請先觀照當下");
-    if (bookmarks.some((item) => item.signature === signature)) return showToast("這一刻已在觀照歷史中");
-    const item = { signature, quote, time: formatTime(time || new Date()), deck: deck.join(" · ") };
-    setBookmarks((prev) => [item, ...prev].slice(0, 12));
-    showToast("此刻已刻印為時空書籤");
+    if (!manifested) return showToast(t.toast_wait);
+    if (bookmarks.some(i => i.signature === signature)) return;
+    setBookmarks(p => [{ signature, quote, time: formatTime(time || new Date()), deck: deck.join(" · ") }, ...p].slice(0, 12));
+    showToast(t.toast_bookmark);
+  }
+
+  async function exportSocialImage() {
+    if (!manifested) return showToast(t.toast_wait);
+    if (isLineBrowser()) return showToast("LINE 內建瀏覽器不支援圖片下載。請點右上角「⋯」選擇以 Chrome / Safari 開啟");
+    try {
+      if (document.fonts?.ready) await document.fonts.ready;
+      const canvas = document.createElement("canvas"); canvas.width = 1200; canvas.height = 1600; const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, 1200, 1600);
+      for (let i = 0; i < 120; i++) {
+        ctx.fillStyle = `rgba(212,212,212,${Math.random() * 0.25})`; ctx.beginPath(); ctx.arc(Math.random() * 1200, Math.random() * 1600, Math.random() * 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = "#666666"; ctx.font = "400 24px system-ui, sans-serif"; ctx.fillText(t.hero_title, 100, 120);
+      ctx.fillStyle = "#ffffff"; ctx.font = "300 40px system-ui, sans-serif"; splitText(ctx, deck.join(" · "), 1000).slice(0, 9).forEach((l, i) => ctx.fillText(l, 100, 240 + i * 56));
+      ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.strokeRect(80, 170, 1040, 620);
+      ctx.fillStyle = "#ececec"; ctx.font = "300 42px system-ui, sans-serif"; splitText(ctx, quote, 960).slice(0, 4).forEach((l, i) => ctx.fillText(l, 100, 930 + i * 66));
+      ctx.fillStyle = "#555555"; ctx.font = "300 28px system-ui, sans-serif";
+      ctx.fillText(`SPACE-TIME SIGNATURE：#${signature}`, 100, 1420);
+      ctx.fillText(`52!：The Only Moment｜${time ? formatTime(time) : formatTime(new Date())}`, 100, 1480);
+      const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+      if (!blob) return;
+      const file = new File([blob], `social-card-${signature}.png`, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ title: "52!", text: quote, files: [file] }); return; } catch {} }
+      downloadBlob(blob, `social-card-${signature}.png`);
+    } catch { showToast("Failed to export"); }
+  }
+
+  async function handleOrderProcess(e) {
+    if (!manifested) { e.preventDefault(); return showToast(t.toast_wait); }
+    trackPixelEvent("ClickWearable", { signature, artworkId });
+    setShowPortal(false); setTimeout(() => window.open(googleFormUrl, "_blank"), 500);
   }
 
   async function handleOperatorGenerate(colorType) {
-    if (!opDeckStr.trim() || !opSignature.trim()) return showToast("請完整填寫牌序與 Signature");
+    if (!opDeckStr.trim() || !opSignature.trim()) return showToast("請填寫牌序與 Signature");
     const arr = opDeckStr.split("·").map(s => s.trim()).filter(Boolean);
-    if (arr.length !== 52) showToast("⚠️ 警告：解析出的牌數不是 52 張，請檢查分隔符號");
-    
-    showToast("正在還原生產圖檔...");
     try {
       const cleanSig = opSignature.replace("#", "").trim();
       const blob = await renderFactoryCanvas(`${colorType}_front`, arr, cleanSig);
       downloadBlob(blob, `Manual-M52-${cleanSig.substring(0,8)}-front-${colorType}.png`);
       showToast("生產圖檔已匯出");
-    } catch (err) {
-      showToast("生成失敗，請檢查格式");
-    }
+    } catch (err) { showToast("生成失敗"); }
   }
 
-  async function handleOrderProcess(e) {
-    if (!manifested) {
-      e.preventDefault();
-      return showToast("請先觀照當下，顯化屬於您的片刻");
-    }
-    
-    trackPixelEvent("ClickWearable", { signature, artworkId });
-    showToast("即將開啟訂製表單...");
-
-    setTimeout(() => {
-      window.open(googleFormUrl, "_blank");
-    }, 500);
-  }
-
-  async function exportSocialImage() {
-    if (!manifested) return showToast("請先觀照當下");
-    
-    if (isLineBrowser()) {
-      showToast("LINE 內建瀏覽器不支援圖片下載。請點右上角「⋯」選擇以 Chrome / Safari 開啟，或直接截圖保存");
-      return;
-    }
-
-    try {
-      if (typeof document !== "undefined" && document.fonts?.ready) await document.fonts.ready;
-      const canvas = document.createElement("canvas");
-      canvas.width = 1200; canvas.height = 1600;
-      const ctx = canvas.getContext("2d");
-      
-      ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, 1200, 1600);
-      for (let i = 0; i < 120; i += 1) {
-        ctx.fillStyle = `rgba(212,212,212,${Math.random() * 0.25})`;
-        ctx.beginPath(); ctx.arc(Math.random() * 1200, Math.random() * 1600, Math.random() * 1.5, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.fillStyle = "#666666"; ctx.font = "400 24px system-ui, sans-serif";
-      try { ctx.letterSpacing = "0.18em"; } catch {}
-      ctx.fillText("每一次洗牌 · 皆是宇宙級的顯化", 100, 120);
-
-      ctx.fillStyle = "#ffffff"; ctx.font = "300 40px system-ui, sans-serif";
-      try { ctx.letterSpacing = "0.08em"; } catch {}
-      splitText(ctx, deck.join(" · "), 1000).slice(0, 9).forEach((line, i) => ctx.fillText(line, 100, 240 + i * 56));
-
-      ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1; ctx.strokeRect(80, 170, 1040, 620);
-      ctx.fillStyle = "#ececec"; ctx.font = "300 42px system-ui, sans-serif";
-      try { ctx.letterSpacing = "0px"; } catch {}
-      splitText(ctx, quote, 960).slice(0, 4).forEach((line, i) => ctx.fillText(line, 100, 930 + i * 66));
-
-      ctx.fillStyle = "#555555"; ctx.font = "300 28px system-ui, sans-serif";
-      ctx.fillText("此組合出現機率為 1 / 52!（約 8.06 × 10⁶⁷ 分之一）。", 100, 1240);
-      ctx.fillText("自宇宙誕生至今，此排列極大機率從未出現，未來亦不會重臨。", 100, 1290);
-      ctx.fillText(`SPACE-TIME SIGNATURE：#${signature}`, 100, 1420);
-      ctx.fillText(`52!：此刻唯一｜${time ? formatTime(time) : formatTime(new Date())}`, 100, 1480);
-
-      const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
-      if (!blob) return;
-      const file = new File([blob], `social-card-${signature}.png`, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        try { await navigator.share({ title: "52!：此刻唯一", text: quote, files: [file] }); return; } catch {}
-      }
-      downloadBlob(blob, `social-card-${signature}.png`);
-    } catch { showToast("圖卡匯出失敗"); }
-  }
-
-  return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
-      <div className="pointer-events-none fixed inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.05),transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.035),transparent_24%)]" />
-
-      <button onClick={() => setSoundEnabled((p) => !p)} className="fixed right-5 top-5 z-30 inline-flex items-center gap-2 text-xs text-neutral-700 transition hover:text-neutral-300">
-        {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-        {soundEnabled ? "聲音開啟" : "聲音關閉"}
-      </button>
-
-      <main className="relative flex min-h-screen items-center justify-center px-5 py-14">
-        <section className="w-full max-w-[660px] text-center">
-          <motion.div 
-            onClick={handleSecretClick}
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} 
-            className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500 cursor-default select-none"
+  // ============================================================================
+  // Views
+  // ============================================================================
+  const renderHome = () => (
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="flex flex-col items-center justify-center px-5 pt-24 pb-32 min-h-screen">
+      <section className="w-full max-w-[660px] text-center">
+        <div onClick={handleSecretClick} className="mb-10 text-[0.78rem] uppercase tracking-[0.28em] text-neutral-500 cursor-default select-none">
+          {t.hero_title}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={signature + String(manifested)} initial={{ opacity: 0, filter: "blur(8px)" }} animate={{ opacity: fading ? 0.28 : 1, filter: fading ? "blur(6px)" : "blur(0px)" }} transition={{ duration: 0.5 }}
+            className="mb-9 min-h-[146px] break-words rounded-[4px] border border-white/[0.055] bg-white/[0.022] px-6 py-6 text-[1.05rem] font-light leading-[1.9] tracking-[0.08em] text-white shadow-[0_0_80px_rgba(255,255,255,0.025)]"
           >
-            每一次洗牌 · 皆是宇宙級的顯化
+            {manifested ? deck.join(" · ") : t.hero_init}
           </motion.div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={signature + String(manifested)}
-              initial={{ opacity: 0, filter: "blur(8px)" }}
-              animate={{ opacity: fading ? 0.28 : 1, filter: fading ? "blur(6px)" : "blur(0px)" }}
-              exit={{ opacity: 0, filter: "blur(8px)" }} transition={{ duration: 0.5 }}
-              className="mb-9 min-h-[146px] break-words rounded-[4px] border border-white/[0.055] bg-white/[0.022] px-6 py-6 text-[1.05rem] font-light leading-[1.9] tracking-[0.08em] text-white shadow-[0_0_80px_rgba(255,255,255,0.025)]"
-            >
-              {manifested ? deck.join(" · ") : "點擊下方，見證此刻唯一的因緣顯化"}
-            </motion.div>
-          </AnimatePresence>
-
-          <motion.div animate={{ opacity: fading ? 0.28 : 1 }} transition={{ duration: 0.45 }} className="mx-auto mb-9 min-h-[82px] max-w-[620px] text-[1.12rem] font-light leading-[1.9] text-[#ececec]">
-            {quote}
-          </motion.div>
-
-          <button onClick={() => setShowMath(true)} className="mx-auto mb-12 block max-w-[560px] text-center text-[0.78rem] font-light leading-[1.7] text-neutral-600 transition hover:text-neutral-400">
-            {manifested ? (
-              <>此組合出現機率為 1 / 52!（約 {FACTORIAL_SHORT} 分之一）。<br />自宇宙誕生 138 億年至今，此排列極大機率從未出現，未來亦不會重臨。</>
-            ) : (<>52 張牌共有 52! 種排列。點擊後，將有一組排列在此刻顯現。</>)}
+        </AnimatePresence>
+        <motion.div animate={{ opacity: fading ? 0.28 : 1 }} className="mx-auto mb-10 min-h-[82px] max-w-[620px] text-[1.12rem] font-light leading-[1.9] text-[#ececec]">
+          {quote}
+        </motion.div>
+        <div className="flex flex-col items-center justify-center gap-5">
+          <button onClick={manifestNow} className="rounded-[2px] border border-white/20 bg-transparent px-10 py-4 text-[0.88rem] uppercase tracking-[0.18em] text-neutral-300 transition duration-300 hover:border-white/60 hover:bg-white/[0.025] hover:text-white active:scale-[0.98]">
+            {t.btn_manifest}
           </button>
+          <div className="max-w-[500px] mt-6 text-[0.82rem] font-light leading-[1.8] text-neutral-500 whitespace-pre-line text-center">
+            {t.math_desc}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-4 text-xs text-neutral-600">
+            <button onClick={bookmarkNow} className="inline-flex items-center gap-1.5 px-2 py-1 hover:text-neutral-300"><Bookmark className="h-3.5 w-3.5" /> {t.btn_bookmark}</button>
+            <span className="text-neutral-800">/</span>
+            <button onClick={exportSocialImage} className="inline-flex items-center gap-1.5 px-2 py-1 hover:text-neutral-300"><Share2 className="h-3.5 w-3.5" /> {t.btn_share}</button>
+            <span className="text-neutral-800">/</span>
+            <button onClick={() => setShowPortal(true)} className="inline-flex items-center gap-1.5 px-2 py-1 hover:text-neutral-300"><Shirt className="h-3.5 w-3.5" /> {t.btn_order}</button>
+          </div>
+        </div>
+        {manifested && <div className="mt-10 font-mono text-[0.68rem] tracking-[0.2em] text-neutral-700">SPACE-TIME SIGNATURE #{signature}</div>}
+      </section>
+    </motion.main>
+  );
 
-          <div className="flex flex-col items-center justify-center gap-4">
-            <button onClick={manifestNow} className="rounded-[2px] border border-white/20 bg-transparent px-8 py-3 text-[0.82rem] uppercase tracking-[0.18em] text-neutral-400 transition duration-300 hover:border-white/60 hover:bg-white/[0.025] hover:text-white active:scale-[0.98]">
-              觀照當下
-            </button>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-neutral-600">
-              <button onClick={() => setShowMath(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Infinity className="h-3.5 w-3.5" /> 52!</button>
-              <span className="text-neutral-800">/</span>
-              <button onClick={bookmarkNow} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Bookmark className="h-3.5 w-3.5" /> 時空書籤</button>
-              <span className="text-neutral-800">/</span>
-              <button onClick={exportSocialImage} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Share2 className="h-3.5 w-3.5" /> 匯出分享圖卡</button>
-              <span className="text-neutral-800">/</span>
-              <button onClick={() => setShowPortal(true)} className="inline-flex items-center gap-1 px-2 py-1 transition hover:text-neutral-300"><Shirt className="h-3.5 w-3.5" /> 支持 & 訂製</button>
+  const renderTexts = () => (
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="px-5 pt-32 pb-24 max-w-4xl mx-auto min-h-screen">
+      <div className="mb-16 text-center">
+        <h1 className="text-xl font-light text-neutral-200 tracking-widest mb-4">Texts Behind This Project</h1>
+        <p className="text-sm text-neutral-500">The philosophical universe of 52!</p>
+      </div>
+      <div className="space-y-12">
+        {BILINGUAL_TEXTS.map(item => (
+          <div key={item.id} className="border-t border-white/[0.05] pt-12 flex flex-col md:flex-row gap-8">
+            <div className="flex-1 space-y-4">
+              <div className="text-[0.68rem] uppercase tracking-[0.2em] text-neutral-600">{String(item.id).padStart(2,'0')} ｜ ZH</div>
+              <h2 className="text-lg font-light text-neutral-200 tracking-wide">{item.zh_title}</h2>
+              <p className="text-[0.9rem] font-light leading-[2.2] text-neutral-400">{item.zh_content}</p>
+            </div>
+            <div className="flex-1 space-y-4">
+              <div className="text-[0.68rem] uppercase tracking-[0.2em] text-neutral-600">{String(item.id).padStart(2,'0')} ｜ EN</div>
+              <h2 className="text-lg font-light text-neutral-200 tracking-wide">{item.en_title}</h2>
+              <p className="text-[0.9rem] font-light leading-[2.2] text-neutral-400">{item.en_content}</p>
             </div>
           </div>
+        ))}
+      </div>
+    </motion.main>
+  );
 
-          {manifested && (
-            <div className="mt-8 font-mono text-[0.68rem] tracking-[0.2em] text-neutral-700">
-              SPACE-TIME SIGNATURE #{signature} {time ? ` · ${formatTime(time)}` : ""}
-            </div>
-          )}
-        </section>
-      </main>
+  const renderPartners = () => (
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="px-5 pt-32 pb-24 max-w-2xl mx-auto min-h-screen text-center">
+      <h1 className="text-2xl font-light text-neutral-200 tracking-widest mb-8">For Partners</h1>
+      <div className="space-y-8 text-[0.95rem] font-light leading-[2] text-neutral-400 text-left">
+        <p>
+          <strong className="text-neutral-200 font-normal">52! The Only Moment</strong> is a hybrid philosophical and commercial experiment. It translates the mathematical absolute of a 52-card permutation (8.06 × 10⁶⁷) into a mindful digital experience and customized physical merchandise.
+        </p>
+        <p>
+          We operate a zero-friction production pipeline. The digital manifestation engine automatically binds the user's specific moment (Space-Time Signature) to a high-resolution, factory-ready DTG (Direct-to-Garment) artwork file.
+        </p>
+        <p>
+          <strong className="text-neutral-200 font-normal">Offline Collaboration & Popup Events:</strong><br/>
+          We are actively seeking international concept stores, boutique cafes, and gallery spaces for 'Shop-in-Shop' collaborations. We provide the interactive manifestation iPad engine and the backend supply chain; you provide the physical space and sensory experience (coffee, ambiance, sound).
+        </p>
+        <div className="pt-8 border-t border-white/[0.05] text-center">
+          <p className="mb-4">To discuss commercial partnerships, exhibition possibilities, or B2B integrations, please contact us.</p>
+          <a href="mailto:contact@moment52.vercel.app" className="text-emerald-500 hover:text-emerald-400 border-b border-emerald-500/30 pb-1">contact@moment52.vercel.app</a>
+        </div>
+      </div>
+    </motion.main>
+  );
 
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black font-sans">
+      <div className="pointer-events-none fixed inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.05),transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.035),transparent_24%)]" />
+
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-black/60 backdrop-blur-md border-b border-white/[0.05]">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button onClick={() => setView('home')} className="text-lg font-light tracking-widest text-white hover:text-neutral-300">52!</button>
+          </div>
+          
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8 text-[0.8rem] tracking-widest uppercase">
+            <button onClick={() => setView('home')} className={`transition ${view==='home'?'text-white':'text-neutral-500 hover:text-neutral-300'}`}>{t.nav_home}</button>
+            <button onClick={() => setView('texts')} className={`transition ${view==='texts'?'text-white':'text-neutral-500 hover:text-neutral-300'}`}>{t.nav_texts}</button>
+            <button onClick={() => setView('partners')} className={`transition ${view==='partners'?'text-white':'text-neutral-500 hover:text-neutral-300'}`}>{t.nav_partners}</button>
+            <div className="w-px h-4 bg-white/10"></div>
+            <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} className="text-neutral-400 hover:text-white transition w-8 text-center">{lang === 'zh' ? 'EN' : 'ZH'}</button>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className="text-neutral-400 hover:text-white transition">
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="md:hidden flex items-center gap-5 text-[0.8rem]">
+            <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} className="text-neutral-400 hover:text-white">{lang === 'zh' ? 'EN' : 'ZH'}</button>
+            <button onClick={() => setMenuOpen(true)} className="text-neutral-400"><Menu className="h-5 w-5" /></button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity:0, x: 20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:20 }} className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center gap-8 text-sm tracking-widest uppercase">
+            <button onClick={() => setMenuOpen(false)} className="absolute top-6 right-6 text-neutral-500"><X className="h-6 w-6"/></button>
+            <button onClick={() => {setView('home'); setMenuOpen(false);}} className={view==='home'?'text-white':'text-neutral-500'}>{t.nav_home}</button>
+            <button onClick={() => {setView('texts'); setMenuOpen(false);}} className={view==='texts'?'text-white':'text-neutral-500'}>{t.nav_texts}</button>
+            <button onClick={() => {setView('partners'); setMenuOpen(false);}} className={view==='partners'?'text-white':'text-neutral-500'}>{t.nav_partners}</button>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className="text-neutral-500 mt-4 flex items-center gap-2">
+               {soundEnabled ? <><Volume2 className="h-4 w-4"/> Sound On</> : <><VolumeX className="h-4 w-4"/> Sound Off</>}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {view === 'home' && <motion.div key="home">{renderHome()}</motion.div>}
+        {view === 'texts' && <motion.div key="texts">{renderTexts()}</motion.div>}
+        {view === 'partners' && <motion.div key="partners">{renderPartners()}</motion.div>}
+      </AnimatePresence>
+
+      {/* Operator Mode Modal */}
       {showOperator && (
         <Modal onClose={() => setShowOperator(false)}>
           <div className="pr-7">
-            <div className="mb-4 flex items-center gap-2 text-[0.72rem] uppercase tracking-[0.24em] text-emerald-500">
-              <Settings className="h-4 w-4" /> Operator Production Mode
-            </div>
+            <div className="mb-4 flex items-center gap-2 text-[0.72rem] uppercase tracking-[0.24em] text-emerald-500"><Settings className="h-4 w-4" /> Operator Mode</div>
             <h2 className="mb-4 text-2xl font-light text-white">營運端生產中心</h2>
-            <p className="mb-4 text-xs font-light leading-6 text-neutral-400">
-              從 Google 表單複製訂單對應的「牌序」與「Signature」貼入下方，即可重新還原 300DPI 生產圖檔，免除前端設備遺失檔案的風險。
-            </p>
             <div className="mb-4 space-y-4">
-              <div>
-                <label className="mb-2 block text-xs text-neutral-500">完整牌序 (以 · 分隔)</label>
-                <textarea 
-                  value={opDeckStr} onChange={(e) => setOpDeckStr(e.target.value)}
-                  className="w-full h-24 bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm focus:border-emerald-500 outline-none"
-                  placeholder="例：♠A · ♥7 · ♦Q ..."
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs text-neutral-500">完整 Signature</label>
-                <input 
-                  type="text" value={opSignature} onChange={(e) => setOpSignature(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm focus:border-emerald-500 outline-none"
-                  placeholder="例：A9F2C84D12E0B7F1"
-                />
-              </div>
+              <textarea value={opDeckStr} onChange={(e) => setOpDeckStr(e.target.value)} className="w-full h-24 bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm outline-none" placeholder="Deck string (e.g. ♠A · ♥7...)" />
+              <input type="text" value={opSignature} onChange={(e) => setOpSignature(e.target.value)} className="w-full bg-white/[0.02] border border-white/[0.1] text-white p-3 text-sm outline-none" placeholder="Signature (e.g. A9F2C...)" />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => handleOperatorGenerate("black")} className="flex-1 bg-white/[0.05] border border-white/20 p-3 text-xs text-white hover:bg-white/10 transition">輸出黑 T 正面</button>
-              <button onClick={() => handleOperatorGenerate("offwhite")} className="flex-1 bg-white/[0.05] border border-white/20 p-3 text-xs text-white hover:bg-white/10 transition">輸出米白 T 正面</button>
+              <button onClick={() => handleOperatorGenerate("black")} className="flex-1 border border-white/20 p-3 text-xs">輸出黑 T 正面</button>
+              <button onClick={() => handleOperatorGenerate("offwhite")} className="flex-1 border border-white/20 p-3 text-xs">輸出米白 T 正面</button>
             </div>
           </div>
         </Modal>
       )}
 
-      {showMath && (
-        <Modal onClose={() => setShowMath(false)}>
-          <div className="pr-7">
-            <div className="mb-5 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">The Mathematical Shock</div>
-            <h2 className="mb-5 text-2xl font-light text-white">52! 的冷數據</h2>
-            <p className="mb-5 text-sm font-light leading-8 text-neutral-400">
-              52 張不同的牌排成一列，第一張有 52 種可能，第二張剩 51 種，第三張剩 50 種，直到最後一張。全部相乘，就是 52!。
-            </p>
-            <div className="mb-5 break-words border border-white/[0.06] bg-white/[0.02] p-4 font-mono text-xs leading-7 text-neutral-500">
-              {FACTORIAL_FULL}
-            </div>
-            <div className="space-y-3 text-sm font-light leading-7 text-neutral-500">
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>宇宙年齡</span><span className="text-neutral-300">約 138 億年</span></div>
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>宇宙誕生至今秒數</span><span className="text-neutral-300">約 4.35 × 10¹⁷ 秒</span></div>
-              <div className="flex justify-between gap-6 border-b border-white/[0.05] pb-2"><span>52 張牌完整排列</span><span className="text-neutral-300">約 8.06 × 10⁶⁷ 種</span></div>
-            </div>
-          </div>
-        </Modal>
-      )}
-
+      {/* Portal Modal */}
       {showPortal && (
         <Modal onClose={() => setShowPortal(false)}>
           <div className="pr-7">
-            <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">Custom Wearable & Production</div>
-            <h2 className="mb-4 text-2xl font-light text-white">建立連接：時空書籤與客製 T 恤</h2>
-            <p className="mb-4 text-sm font-light leading-7 text-neutral-400">
-              免費模式提供因緣顯化觀照。若此片刻深深觸動你，可進入訂製通道，將當下牌序、金句、哈希簽章永久刻印。
-            </p>
-
-            <div className="mb-5 space-y-3 rounded bg-white/[0.02] border border-white/[0.05] p-4 text-[0.78rem] leading-6 text-neutral-500">
-              <div><span className="text-neutral-400">【訂製與生產說明】</span> 系統已為此刻建立 Artwork ID。請進入表單填寫尺寸、款式與收件資料。營運端將依據表單中的牌序與 Signature 重新產生工廠印刷圖檔。客製商品不適用七天鑑賞期退換貨。</div>
+            <div className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-emerald-500/80">Custom Wearable</div>
+            <h2 className="mb-4 text-2xl font-light text-white tracking-widest">{t.portal_title}</h2>
+            <p className="mb-4 text-sm font-light leading-7 text-neutral-400">{t.portal_desc}</p>
+            <div className="mb-8 space-y-3 rounded bg-white/[0.015] border border-white/[0.05] p-5 text-[0.8rem] leading-[1.8] text-neutral-500">
+              {t.portal_notice}
             </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={handleOrderProcess}
-                className="inline-flex flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
-              >
-                前往訂製表單
+            <div className="flex flex-col sm:flex-row">
+              <button onClick={handleOrderProcess} className="inline-flex flex-1 items-center justify-center border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-[0.85rem] tracking-[0.1em] text-emerald-400 hover:bg-emerald-500/20">
+                {t.portal_btn}
               </button>
             </div>
           </div>
@@ -712,7 +609,7 @@ export default function App() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-4 py-2 text-xs text-neutral-300 whitespace-nowrap">
+        <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 border border-white/10 bg-black px-5 py-3 text-[0.8rem] tracking-wider text-neutral-300 whitespace-nowrap shadow-2xl">
           {toast}
         </div>
       )}
