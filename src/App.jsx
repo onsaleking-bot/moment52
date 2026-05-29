@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bookmark,
-  Infinity as InfinityIcon,
   Share2,
   Volume2,
   VolumeX,
@@ -89,13 +88,12 @@ const DICT = {
     layer3_text: "按下洗牌，保存這一刻。\n或把它分享給一個你想提醒的人：\n「這一刻，真的只會發生一次。」",
     btn_bookmark: "時空書籤",
     btn_share: "分享圖卡",
-    btn_order: "把此刻做成 T 恤",
     toast_wait: "請先產生排列",
     toast_bookmark: "此刻已刻印為時空書籤",
     portal_title: "建立連接：客製 T 恤",
     portal_desc: "這不是大量生產的圖案，而是你在這一刻生成的唯一排列。將此片刻轉化為實體的空間簽章。",
     portal_notice: "系統已為此刻建立 Artwork ID。請進入表單填寫尺寸、款式與收件資料。營運端將依據專屬牌序重新產生工廠印刷圖檔。客製商品不適用七天鑑賞期。",
-    portal_btn: "前往訂製表單 (NT$1,280)"
+    portal_btn: "前往訂製表單"
   },
   en: {
     nav_home: "Home",
@@ -112,7 +110,6 @@ const DICT = {
     layer3_text: "Shuffle to save this moment.\nOr share it with someone you want to remind:\n'This moment truly only happens once.'",
     btn_bookmark: "Bookmark",
     btn_share: "Share",
-    btn_order: "Turn This Into a T-Shirt",
     toast_wait: "Please generate an arrangement first",
     toast_bookmark: "Moment bookmarked",
     portal_title: "Establish Connection: Custom T-Shirt",
@@ -315,7 +312,7 @@ async function renderFactoryCanvas(templateType, targetDeckArr, targetSignature)
 }
 
 // ============================================================================
-// 4. 新增 T-Shirt Visual 元件
+// 4. T-Shirt Visual 元件 (放大與提亮視覺)
 // ============================================================================
 function TShirtVisual({ deck, signature, manifested }) {
   const rows = [
@@ -326,31 +323,36 @@ function TShirtVisual({ deck, signature, manifested }) {
   ];
 
   return (
-    <div className="relative mx-auto w-[260px] h-[340px] drop-shadow-2xl opacity-90 hover:opacity-100 transition-opacity">
+    <div className="relative mx-auto w-[280px] h-[380px] drop-shadow-2xl opacity-95 hover:opacity-100 transition-opacity mb-8">
       {/* shirt body */}
-      <div className="absolute inset-x-8 top-12 bottom-0 rounded-t-[40px] rounded-b-[18px] bg-[#111] border border-white/10 shadow-2xl" />
+      <div className="absolute inset-x-6 top-10 bottom-0 rounded-t-[40px] rounded-b-[18px] bg-[#161616] border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.05)]" />
       {/* sleeves */}
-      <div className="absolute left-0 top-20 w-20 h-28 bg-[#111] border border-white/10 rounded-l-[28px] -rotate-12" />
-      <div className="absolute right-0 top-20 w-20 h-28 bg-[#111] border border-white/10 rounded-r-[28px] rotate-12" />
+      <div className="absolute left-0 top-16 w-20 h-28 bg-[#161616] border border-white/20 rounded-l-[28px] -rotate-12" />
+      <div className="absolute right-0 top-16 w-20 h-28 bg-[#161616] border border-white/20 rounded-r-[28px] rotate-12" />
       {/* collar */}
-      <div className="absolute left-1/2 top-14 h-14 w-20 -translate-x-1/2 rounded-b-full border-b border-white/20 bg-[#0a0a0a]" />
+      <div className="absolute left-1/2 top-10 h-12 w-24 -translate-x-1/2 rounded-b-full border-b-2 border-white/20 bg-[#0a0a0a]" />
 
       {/* print area */}
-      <div className="absolute left-1/2 top-[115px] w-[150px] -translate-x-1/2 text-center flex flex-col items-center">
-        <div className="mb-3 text-[0.65rem] font-medium tracking-[0.22em] text-neutral-300">
+      <div className="absolute left-1/2 top-[120px] w-[160px] -translate-x-1/2 text-center flex flex-col items-center">
+        <div className="mb-3 text-[0.75rem] font-medium tracking-[0.25em] text-neutral-200">
           52!
         </div>
-        <div className="mb-3 text-[0.45rem] font-light leading-[1.7] tracking-[0.06em] text-neutral-400 w-[120px]">
+        <div className="mb-4 text-[0.5rem] font-light leading-[1.8] tracking-[0.08em] text-neutral-300 w-[140px]">
           {rows.map((r, i) => (
             <div key={i} className="truncate">{manifested ? r : "· · · · · · · · · · ·"}</div>
           ))}
         </div>
-        <div className="mt-2 text-[0.35rem] tracking-[0.16em] text-neutral-500">
+        <div className="mt-2 text-[0.4rem] tracking-[0.2em] text-neutral-400">
           SPACE-TIME SIGNATURE
         </div>
-        <div className="mt-1 text-[0.4rem] tracking-[0.08em] text-neutral-400">
+        <div className="mt-1 text-[0.45rem] tracking-[0.1em] text-neutral-300">
           #{manifested ? signature.slice(0, 8) : "YOUR MOMENT"}
         </div>
+      </div>
+      
+      {/* Mockup Label */}
+      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[0.65rem] text-neutral-600 tracking-widest whitespace-nowrap">
+        * 商品示意圖 Product Mockup
       </div>
     </div>
   );
@@ -406,7 +408,6 @@ export default function App() {
   useEffect(() => { saveToStorage(STORAGE_KEYS.sound, String(soundEnabled)); }, [soundEnabled]);
   useEffect(() => { saveToStorage(STORAGE_KEYS.lang, lang); }, [lang]);
   
-  // 初始化 Meta Pixel 與頁面瀏覽追蹤
   useEffect(() => {
     if (isBrowser()) {
       !function(f,b,e,v,n,t,s)
@@ -545,41 +546,47 @@ export default function App() {
         </div>
 
         {/* T-Shirt Product Preview Section */}
-        <section className="mt-8 mb-24 border-t border-white/[0.05] pt-20 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center text-left">
-            <div className="flex justify-center">
+        <section className="mt-8 mb-24 border-t border-white/[0.05] pt-24 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center text-left">
+            <div className="flex justify-center md:justify-end pb-8 md:pb-0">
               <TShirtVisual deck={deck} signature={signature} manifested={manifested} />
             </div>
-            <div>
+            <div className="flex flex-col justify-center md:pl-4">
               <div className="mb-3 text-[0.7rem] uppercase tracking-[0.25em] text-emerald-500">
                 Custom Wearable
               </div>
-              <h2 className="mb-5 text-2xl font-light tracking-widest text-neutral-100">
+              <h2 className="mb-6 text-[1.65rem] font-light tracking-widest text-neutral-100">
                 {lang === "zh" ? "把此刻穿在身上" : "Wear The Only Moment"}
               </h2>
-              <p className="mb-5 text-[0.95rem] font-light leading-[2] text-neutral-400">
+              <p className="mb-6 text-[0.95rem] font-light leading-[2] text-neutral-400 whitespace-pre-line">
                 {lang === "zh"
-                  ? "每一次排列都會產生一組專屬牌序與 Space-Time Signature。這不是大量生產的圖案，而是你在這一刻生成的唯一排列。"
-                  : "Each shuffle generates a unique deck sequence and Space-Time Signature. This is not mass-produced; it is the unique arrangement you generated in this exact moment."}
+                  ? "每一次洗牌，都會產生一組專屬牌序與 Space-Time Signature。\n這不是大量生產的圖案，而是你在這一刻生成的唯一排列。\n你可以把它轉化為一件只屬於自己的客製 T 恤。"
+                  : "Every shuffle generates a unique sequence and Space-Time Signature.\nThis is not mass-produced; it is the unique arrangement you generated in this exact moment.\nTurn it into a custom T-shirt that belongs only to you."}
               </p>
-              <div className="mb-8 space-y-2 text-[0.85rem] font-light leading-[1.8] text-neutral-500">
-                <div>・{lang === "zh" ? "黑色極簡版型" : "Minimal black edition"}</div>
-                <div>・{lang === "zh" ? "印上你的專屬牌序" : "Printed with your unique card sequence"}</div>
-                <div>・{lang === "zh" ? "附 Space-Time Signature" : "Includes Space-Time Signature"}</div>
-                <div>・NT$1,280</div>
+              
+              <div className="mb-8 space-y-3 text-[0.85rem] font-light leading-[1.8] text-neutral-500 bg-white/[0.015] border border-white/[0.05] p-5 rounded-[2px]">
+                <div className="text-xl text-emerald-400 font-medium mb-4 pb-4 border-b border-white/[0.05] flex items-center">
+                  NT$1,280 <span className="text-xs text-neutral-500 ml-3 tracking-widest font-light">{lang === "zh" ? "客製化製作｜每件牌序皆不同" : "Custom Made | Unique Print"}</span>
+                </div>
+                <div className="flex gap-3"><div className="text-emerald-500">・</div><div>{lang === "zh" ? "黑色極簡款" : "Minimal black edition"}</div></div>
+                <div className="flex gap-3"><div className="text-emerald-500">・</div><div>{lang === "zh" ? "正面印製專屬牌序" : "Printed with your unique card sequence"}</div></div>
+                <div className="flex gap-3"><div className="text-emerald-500">・</div><div>{lang === "zh" ? "每件皆附專屬 Space-Time Signature" : "Includes exclusive Space-Time Signature"}</div></div>
+                <div className="flex gap-3"><div className="text-emerald-500">・</div><div>{lang === "zh" ? "接單後製作，約 7–14 個工作天出貨" : "Made to order, ships in 7-14 business days"}</div></div>
+                <div className="flex gap-3"><div className="text-emerald-500">・</div><div>{lang === "zh" ? "客製商品恕不適用七天鑑賞期退換貨" : "Custom items are non-refundable"}</div></div>
               </div>
+
               <button
                 onClick={() => {
                   if(!manifested) { showToast(t.toast_wait); return; }
                   setShowPortal(true);
                 }}
-                className="inline-flex w-full md:w-auto items-center justify-center border border-emerald-500/30 bg-emerald-500/10 px-8 py-4 text-[0.85rem] tracking-[0.14em] text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                className="inline-flex w-full md:w-auto items-center justify-center border border-emerald-500/40 bg-emerald-500/10 px-10 py-4 text-[0.9rem] tracking-[0.15em] text-emerald-400 hover:bg-emerald-500/20 transition-colors"
               >
-                <Shirt className="h-4 w-4 mr-2" /> {t.btn_order}
+                <Shirt className="h-4 w-4 mr-3" /> {lang === "zh" ? "把這一刻做成 T 恤" : "Turn This Moment Into a T-Shirt"}
               </button>
               {!manifested && (
-                <p className="mt-4 text-[0.75rem] text-neutral-600">
-                  {lang === "zh" ? "請先產生你的此刻排列，再進入訂製。" : "Generate your moment first before ordering."}
+                <p className="mt-4 text-[0.75rem] text-neutral-600 tracking-wider">
+                  {lang === "zh" ? "請先產生排列，再進入訂製。" : "Generate your sequence first before ordering."}
                 </p>
               )}
             </div>
