@@ -512,8 +512,8 @@ export default function App() {
           We are actively seeking international concept stores, boutique cafes, and gallery spaces for 'Shop-in-Shop' collaborations. We provide the interactive manifestation iPad engine and the backend supply chain; you provide the physical space and sensory experience (coffee, ambiance, sound).
         </p>
         <div className="pt-8 border-t border-white/[0.05] text-center">
-          <p className="mb-4">To discuss commercial partnerships, exhibition possibilities, or B2B integrations, please contact us.</p>
-          <a href="mailto:contact@moment52.vercel.app" className="text-emerald-500 hover:text-emerald-400 border-b border-emerald-500/30 pb-1">contact@moment52.vercel.app</a>
+          <p className="mb-4">For collaboration inquiries, please contact:</p>
+          <a href="mailto:onsaleking@gmail.com" className="text-emerald-500 hover:text-emerald-400 border-b border-emerald-500/30 pb-1">onsaleking@gmail.com</a>
         </div>
       </div>
     </motion.main>
