@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bookmark,
-  Infinity as InfinityIcon,
   Share2,
   Volume2,
   VolumeX,
@@ -35,7 +34,6 @@ const GOOGLE_FORM_CONFIG = {
 };
 
 const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
-const FACTORIAL_FULL = "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
 
 let sharedAudioContext = null;
 
@@ -358,7 +356,6 @@ export default function App() {
     return () => { clearTimeout(toastTimerRef.current); clearTimeout(manifestTimerRef.current); };
   }, []);
 
-  // Update initial quote if not manifested when language changes
   useEffect(() => { if (!manifested) setQuote(DICT[lang].hero_init); }, [lang, manifested]);
 
   function showToast(msg) {
