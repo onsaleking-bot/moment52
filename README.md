@@ -23,9 +23,3 @@ A standard deck of 52 cards has:
 
 ```text
 52! = 80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000
-
-## 注意
-
-- 目前「時空書籤」是 MVP 模擬解鎖，不會真正收款。
-- 未來 iOS / Android App 版應使用 Apple In-App Purchase / Google Play Billing。
-- 手機 LINE 內建瀏覽器可能攔截下載，因此程式會優先使用 navigator.share。
