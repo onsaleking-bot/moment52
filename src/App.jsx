@@ -90,7 +90,25 @@ const exportElementAsPng = async (element, filename, options = {}) => {
   link.click();
 };
 
-const HomeView = ({ onStart }) => (
+const TextButton = ({ children, onClick }) => (
+  <button
+    onClick={onClick}
+    className="text-xs tracking-[0.25em] text-neutral-500 transition-colors hover:text-white"
+  >
+    {children}
+  </button>
+);
+
+const BackButton = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="mt-12 text-xs tracking-[0.25em] text-neutral-500 transition-colors hover:text-white"
+  >
+    ← 返回
+  </button>
+);
+
+const HomeView = ({ onStart, onAbout, onLook, onSolitude }) => (
   <motion.div
     key="home"
     initial={{ opacity: 0 }}
@@ -125,10 +143,16 @@ const HomeView = ({ onStart }) => (
 
     <button
       onClick={onStart}
-      className="mb-16 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+      className="mb-12 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
     >
-      看見此刻
+      Look.
     </button>
+
+    <div className="mb-16 flex flex-wrap items-center justify-center gap-6">
+      <TextButton onClick={onAbout}>為什麼是 52!</TextButton>
+      <TextButton onClick={onLook}>為什麼是 Look</TextButton>
+      <TextButton onClick={onSolitude}>關於孤獨</TextButton>
+    </div>
 
     <div className="max-w-xl text-center">
       <p className="mb-4 text-[10px] uppercase tracking-[0.4em] text-neutral-700">
@@ -142,6 +166,153 @@ const HomeView = ({ onStart }) => (
         你看到的排列幾乎不會再次出現。正如這個瞬間。
       </p>
     </div>
+  </motion.div>
+);
+
+const AboutView = ({ onBack, onStart }) => (
+  <motion.div
+    key="about"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1 }}
+    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
+  >
+    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+      About 52!
+    </p>
+
+    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+      為什麼是 52!
+    </h2>
+
+    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
+      <p>一副撲克牌共有 52 張。</p>
+      <p>完全隨機洗牌後，可能產生 52! 種排列。</p>
+      <p>這個數量遠遠超過宇宙中的恆星數量。</p>
+
+      <div className="py-8">
+        <p className="break-words font-mono text-[10px] leading-relaxed tracking-wider text-neutral-600">
+          {FACTORIAL_52}
+        </p>
+      </div>
+
+      <p>因此，你看到的排列，幾乎不會再次出現。</p>
+      <p>正如這個瞬間。</p>
+      <p>它正在發生。</p>
+      <p>然後永遠消失。</p>
+    </div>
+
+    <button
+      onClick={onStart}
+      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+    >
+      看見此刻
+    </button>
+
+    <BackButton onClick={onBack} />
+  </motion.div>
+);
+
+const LookArticleView = ({ onBack, onStart }) => (
+  <motion.div
+    key="look-article"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1 }}
+    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
+  >
+    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+      Look.
+    </p>
+
+    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+      為什麼不是 See？
+    </h2>
+
+    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
+      <p>因為 See 是被動的。</p>
+      <p>你看見下雨。</p>
+      <p>你看見訊息未回。</p>
+      <p>你看見事情發生。</p>
+
+      <div className="h-4" />
+
+      <p>而 Look 是主動的。</p>
+      <p>看看這一刻。</p>
+      <p>看看自己正在想什麼。</p>
+      <p>看看自己是否正在替事情編造故事。</p>
+      <p>看看自己是否正在害怕。</p>
+      <p>看看自己是否正在期待。</p>
+
+      <div className="h-4" />
+
+      <p>52! 不是為了給你答案。</p>
+      <p>而是邀請你停下來觀看。</p>
+      <p className="text-white/80">Look.</p>
+    </div>
+
+    <button
+      onClick={onStart}
+      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+    >
+      開始觀看
+    </button>
+
+    <BackButton onClick={onBack} />
+  </motion.div>
+);
+
+const SolitudeView = ({ onBack, onStart }) => (
+  <motion.div
+    key="solitude"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1 }}
+    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
+  >
+    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+      Essay
+    </p>
+
+    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+      關於孤獨
+    </h2>
+
+    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
+      <p>多數人活在自己的內心。</p>
+      <p>讀著自己的劇本。</p>
+
+      <div className="h-4" />
+
+      <p>於是孤獨並不是沒有人陪伴。</p>
+      <p>而是很少有人願意一起觀看。</p>
+
+      <div className="h-4" />
+
+      <p>看見事實。</p>
+      <p>看見恐懼。</p>
+      <p>看見期待。</p>
+      <p>看見自己。</p>
+
+      <div className="h-4" />
+
+      <p>真正的觀看無法被說服。</p>
+      <p>只能被發現。</p>
+
+      <p className="pt-4 text-white/80">Look.</p>
+    </div>
+
+    <button
+      onClick={onStart}
+      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+    >
+      看見此刻
+    </button>
+
+    <BackButton onClick={onBack} />
   </motion.div>
 );
 
@@ -586,7 +757,29 @@ export default function App() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
       <AnimatePresence mode="wait">
-        {step === "home" && <HomeView onStart={() => setStep("look")} />}
+        {step === "home" && (
+          <HomeView
+            onStart={() => setStep("look")}
+            onAbout={() => setStep("about")}
+            onLook={() => setStep("lookArticle")}
+            onSolitude={() => setStep("solitude")}
+          />
+        )}
+
+        {step === "about" && (
+          <AboutView onBack={() => setStep("home")} onStart={() => setStep("look")} />
+        )}
+
+        {step === "lookArticle" && (
+          <LookArticleView
+            onBack={() => setStep("home")}
+            onStart={() => setStep("look")}
+          />
+        )}
+
+        {step === "solitude" && (
+          <SolitudeView onBack={() => setStep("home")} onStart={() => setStep("look")} />
+        )}
 
         {step === "look" && (
           <LookView
