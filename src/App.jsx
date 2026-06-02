@@ -20,9 +20,8 @@ const STORAGE_KEYS = {
   sound: "moment52_sound",
 };
 
-// --- 擴充後的核心金句庫 ---
+// --- 核心金句庫 ---
 const QUOTES = [
-  // 【時空排列與唯一】
   "這副牌的排列，宇宙可能從未見過。",
   "如果此刻只能發生一次，那麼此刻就值得珍惜。",
   "52! 不是機率，而是提醒。",
@@ -33,23 +32,17 @@ const QUOTES = [
   "這一刻不會重來，這個版本的你也不會重來。",
   "宇宙沒有重複洗出同一個你。",
   "每一次洗牌，都是一次小型宇宙誕生。",
-  
-  // 【觀看與宇宙】
   "我們研究宇宙研究了幾千年，後來才發現，研究者本身就是宇宙。",
   "你不是宇宙裡的人，你是宇宙的一部分。",
   "宇宙或許沒有答案，但它有提問。",
   "宇宙最大的奇蹟，也許不是存在，而是存在開始觀看自己。",
   "一個角度是圓的一部分。",
   "此刻，是宇宙第一次從這個角度看見自己。",
-  
-  // 【生死與存在】
   "死亡帶走的，或許只是故事。",
   "生命不是永恆，生命是曾經。",
   "有一天你會離開，但今天還在。",
   "死亡不是生命的對立面，它是生命的一部分。",
   "你終將消失，所以此刻更值得存在。",
-  
-  // 【放過、當下與解釋】
   "未來尚未到來，你卻已經替它痛苦。",
   "報告還沒出來，剩下的都是故事。",
   "恐懼常常不是來自事情，而是來自想像。",
@@ -59,15 +52,11 @@ const QUOTES = [
   "你以為人生正在等待開始。其實人生正在發生。",
   "不要等待未來的獎賞，完整的自己已經在這裡。",
   "所有的未來，最後都落在你眼前這一秒。",
-  
-  // 【無常與有限】
   "花會凋謝，所以花開才值得被看見。",
   "一切都會消失，包括這句話。",
   "無常不是生命的缺陷，無常就是生命。",
   "正因為有限，一切才顯得珍貴。",
   "夕陽之所以美，是因為它正在離開。",
-  
-  // 【普通與獨特】
   "宇宙從來沒有要求一朵花改變春天。",
   "你不必特別，你已經獨一無二。",
   "普通不是缺陷，普通是大多數生命的樣子。",
@@ -662,168 +651,4 @@ export default function App() {
       </div>
 
       {/* T-Shirt Product Section */}
-      <div id="tshirt-section" className="mx-auto mt-24 mb-32 max-w-5xl px-6">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
-          
-          {/* 左側：真實商品攝影照片 */}
-          <div className="flex flex-col gap-4">
-            <img 
-              src="/tshirt-front.png" 
-              alt="52! 此刻唯一 T 恤平面照" 
-              className="w-full rounded-[4px] border border-white/10 bg-[#0a0a0a] object-cover shadow-2xl"
-            />
-            <img 
-              src="/tshirt-detail.png" 
-              alt="52! 此刻唯一 T 恤細節照" 
-              className="w-full rounded-[4px] border border-white/10 bg-[#0a0a0a] object-cover shadow-2xl"
-            />
-            <p className="text-center text-[0.7rem] text-neutral-600">
-              * 實體商品攝影，黑色極簡款
-            </p>
-          </div>
-
-          {/* 右側：商品資訊與訂製入口 */}
-          <div className="text-left">
-            <h3 className="mb-6 text-2xl font-light text-white">把這一刻做成 T 恤</h3>
-            <p className="mb-8 text-[0.95rem] leading-[1.8] text-neutral-400">
-              每一次洗牌，都會產生一組專屬牌序與 Space-Time Signature。
-              這不是大量生產的圖案，而是你在這一刻生成的唯一排列。<br /><br />
-              你可以把它轉化為一件只屬於自己的客製 T 恤。
-            </p>
-            
-            <div className="mb-8 rounded-[4px] bg-white/[0.02] p-6 border border-white/[0.05]">
-              <ul className="space-y-3 text-[0.85rem] text-neutral-400">
-                <li className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-neutral-500"></span>
-                  正面印製專屬牌序與 Space-Time Signature
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-neutral-500"></span>
-                  黑色極簡款，100% 精梳棉
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-neutral-500"></span>
-                  接單後製作，約 7–14 個工作天出貨
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-neutral-500"></span>
-                  客製商品恕不適用七天鑑賞期退換貨
-                </li>
-              </ul>
-              <div className="mt-6 border-t border-white/[0.05] pt-4 text-xl font-light text-white">
-                NT$1,280
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowPortal(true)} 
-              className="w-full rounded-[4px] border border-white/20 bg-transparent px-6 py-4 text-sm tracking-widest text-white transition hover:bg-white hover:text-black"
-            >
-              訂製我的此刻 T 恤
-            </button>
-            {!manifested && (
-              <p className="mt-3 text-center text-[0.75rem] text-neutral-600">
-                請先於上方生成今日排列，再進入訂製。
-              </p>
-            )}
-          </div>
-          
-        </div>
-      </div>
-
-      {/* Toast 提示 */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-10 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap bg-white px-5 py-3 text-sm text-black shadow-2xl"
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 彈窗：52! 數學數據 */}
-      <AnimatePresence>
-        {showMath && (
-          <Modal onClose={() => setShowMath(false)}>
-            <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-              <Infinity size={20} className="text-neutral-400" />
-              <h2 className="text-lg tracking-widest text-white">The Mathematical Shock</h2>
-            </div>
-            <h3 className="mb-4 text-sm font-medium text-neutral-200">52! 的冷數據</h3>
-            <p className="mb-6 text-sm leading-relaxed text-neutral-400">
-              52 張不同的牌排成一列，第一張有 52 種可能，第二張剩 51 種，第三張剩 50 種，直到最後一張。全部相乘，就是 52!。
-            </p>
-            <div className="break-all rounded bg-white/[0.03] p-4 font-mono text-[0.75rem] leading-relaxed text-neutral-500">
-              {FACTORIAL_FULL}
-            </div>
-            <div className="mt-6 space-y-3 border-t border-white/10 pt-6 text-sm text-neutral-400">
-              <div className="flex justify-between">
-                <span>宇宙年齡</span>
-                <span className="text-white">約 138 億年</span>
-              </div>
-              <div className="flex justify-between">
-                <span>宇宙誕生至今秒數</span>
-                <span className="text-white">約 4.35 × 10¹⁷ 秒</span>
-              </div>
-              <div className="flex justify-between font-medium text-white">
-                <span>52 張牌完整排列</span>
-                <span>約 8.06 × 10⁶診 種</span>
-              </div>
-            </div>
-          </Modal>
-        )}
-      </AnimatePresence>
-
-      {/* 彈窗：訂製與生產入口 */}
-      <AnimatePresence>
-        {showPortal && (
-          <Modal onClose={() => setShowPortal(false)}>
-            <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-              <Shirt size={20} className="text-neutral-400" />
-              <h2 className="text-lg tracking-widest text-white">The Portal</h2>
-            </div>
-            <h3 className="mb-4 text-sm font-medium text-neutral-200">訂製此刻唯一 T 恤（NT$1,280）</h3>
-            <div className="mb-6 space-y-3 text-sm leading-relaxed text-neutral-400">
-              <p>不是因為這件衣服特殊。而是因為今天的你不會再出現一次。</p>
-              <p>點擊進入表單，系統會自動帶入您當下的牌序、簽章與金句。我們將為您將這一刻轉化為可穿戴的實體紀念。</p>
-              <div className="mt-4 rounded bg-white/[0.02] p-4 text-[0.8rem] border border-white/5">
-                <strong className="text-neutral-300 mb-1 block">客製化商品聲明與個資保護告知</strong>
-                依據消費者保護法第 19 條規定，此商品屬於「依消費者要求所為之客製化給付」，不適用七天鑑賞期退換貨規定。
-                您填寫的姓名、電話、地址等資訊，僅供生產寄送與客服核對使用，絕不挪作他用。
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <div className="flex flex-col gap-2 w-full">
-                <button
-                  onClick={() => generateFactoryArtwork('black')}
-                  className="inline-flex w-full items-center justify-center gap-2 border border-white/10 px-4 py-2 text-xs text-neutral-500 transition hover:border-white/40 hover:text-neutral-200"
-                >
-                  <Download size={14} /> 產生「黑 T」生產圖檔
-                </button>
-                <button
-                  onClick={() => generateFactoryArtwork('offwhite')}
-                  className="inline-flex w-full items-center justify-center gap-2 border border-white/10 px-4 py-2 text-xs text-neutral-500 transition hover:border-white/40 hover:text-neutral-200"
-                >
-                  <Download size={14} /> 產生「米白 T」生產圖檔
-                </button>
-              </div>
-              <a
-                href={googleFormUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-neutral-200 sm:w-auto mt-4 sm:mt-0 self-end"
-                onClick={() => setShowPortal(false)}
-              >
-                進入訂製表單
-              </a>
-            </div>
-          </Modal>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
+      <div id="tshirt-section" className="mx-auto
