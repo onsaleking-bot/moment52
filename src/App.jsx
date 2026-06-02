@@ -176,7 +176,6 @@ export default function App() {
 
   const handlePreorder = () => {
     if (!momentData) return;
-    // 前端一鍵代入：消滅「人工整理牌序」的內耗
     const params = new URLSearchParams({
       usp: "pp_url",
       [FORM_ENTRY_DECK]: momentData.text,
@@ -185,7 +184,7 @@ export default function App() {
       [FORM_ENTRY_QUOTE]: momentData.quote || momentData.text,
       [FORM_ENTRY_SIZE]: "M",
       [FORM_ENTRY_COLOR]: "米白",
-      [FORM_ENTRY_CUSTOM_NOTICE]: "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。", // 貨到付款（COD）拒收防禦：心理上篩選掉不誠實的低質量訂單
+      [FORM_ENTRY_CUSTOM_NOTICE]: "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。",
       [FORM_ENTRY_PRIVACY_NOTICE]: "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
     });
     window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank");
@@ -235,7 +234,6 @@ export default function App() {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}
             className="w-full flex flex-col items-center"
           >
-            {/* 認知解壓縮的引導文案 */}
             <div className="text-neutral-500 font-light tracking-[0.15em] text-sm mb-12 text-center flex flex-col items-center">
               <p className="mb-2">這不是創作。</p>
               <p className="mb-2">不是願望。</p>
@@ -268,7 +266,6 @@ export default function App() {
               autoFocus
             />
             
-            {/* 極簡有力的按鈕 */}
             <button 
               onClick={handleArchive}
               disabled={!input.trim() || isArchiving}
@@ -377,30 +374,41 @@ export default function App() {
     <div className="min-h-screen overflow-x-hidden bg-[#0E0E0E] text-[#D4D4D4] selection:bg-white/30 font-sans">
       {momentData && (
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-          <div 
-            ref={factoryRef} 
-            className="flex flex-col items-center justify-center font-sans text-[#FFFFFF]" 
-            style={{ width: '1200px', height: '1600px', backgroundColor: 'transparent', padding: '100px' }}
+          <div
+            ref={factoryRef}
+            className="flex flex-col items-center justify-center font-sans text-[#FFFFFF]"
+            style={{
+              width: '1200px',
+              height: '1600px',
+              backgroundColor: 'transparent',
+              padding: '100px'
+            }}
           >
-            <p style={{ fontSize: '32px', letterSpacing: '0.3em', marginBottom: '80px', color: '#FFFFFF' }}>此刻我看見</p>
-            <p style={{ fontSize: '110px', fontWeight: 300, letterSpacing: '0.1em', marginBottom: '160px', color: '#FFFFFF', textAlign: 'center', lineHeight: '1.4' }}>
+            <p style={{ fontSize: '32px', letterSpacing: '0.3em', marginBottom: '80px', color: '#FFFFFF' }}>
+              此刻我看見
+            </p>
+
+            <p
+              style={{
+                fontSize: '110px',
+                fontWeight: 300,
+                letterSpacing: '0.1em',
+                marginBottom: '160px',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}
+            >
               「{momentData.text}」
             </p>
+
             <p style={{ fontSize: '32px', fontFamily: 'monospace', letterSpacing: '0.2em', color: '#FFFFFF' }}>
               {momentData.signature}
             </p>
           </div>
         </div>
       )}
-      <AnimatePresence mode="wait">
-        {step === 'home' && renderHomeView()}
-        {step === 'look' && renderLookView()}
-        {step === 'archive' && renderArchiveView()}
-        {step === 'tshirt' && renderTShirtView()}
-      </AnimatePresence>
-    </div>
-  );
-}
+
       <AnimatePresence mode="wait">
         {step === 'home' && renderHomeView()}
         {step === 'look' && renderLookView()}
