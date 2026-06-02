@@ -346,7 +346,7 @@ const TShirtView = ({ data, onBack }) => {
               onClick={onBack}
               className="text-xs tracking-[0.1em] text-neutral-500 transition-colors hover:text-white"
             >
-              ← 返回觀看紀錄
+              ← 返回觀看紀錄 
             </button>
           </div>
         </div>
