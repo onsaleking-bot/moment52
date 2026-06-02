@@ -1,14 +1,46 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { Download, Shirt, RotateCcw, Share2, ArrowRight } from 'lucide-react';
+import { Download, Shirt, RotateCcw, ArrowRight } from 'lucide-react';
+import { QUOTES } from "./quotes";
 
-// --- 工具函數 ---
+// --- Google Form 真實對接變數 ---
+const GOOGLE_FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform";
+
+const FORM_ENTRY_DECK = "entry.907849226";
+const FORM_ENTRY_SIGNATURE = "entry.1745604772";
+const FORM_ENTRY_TIME = "entry.284034277";
+const FORM_ENTRY_QUOTE = "entry.369992627";
+
+// 暫時保留，供未來表單擴充使用，不影響目前運作
+const FORM_ENTRY_NAME = "entry.2037081297";
+const FORM_ENTRY_PHONE = "entry.1057236220";
+const FORM_ENTRY_EMAIL = "entry.856015986";
+const FORM_ENTRY_SIZE = "entry.508788419";
+const FORM_ENTRY_COLOR = "entry.1607852062";
+const FORM_ENTRY_ADDRESS = "entry.1780577420";
+const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
+const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
+const FORM_ENTRY_NOTE = "entry.1489093389";
+
+// --- 工具函數與常數 ---
 const generateSignature = () => {
-  const chars = '0123456789ABCDEF';
-  let hash = '';
-  for (let i = 0; i < 4; i++) hash += chars[Math.floor(Math.random() * 16)];
-  return `#L-${hash}`;
+  const chars = "0123456789ABCDEF";
+  let hash = "";
+
+  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+    const array = new Uint8Array(8);
+    window.crypto.getRandomValues(array);
+    array.forEach((val) => {
+      hash += chars[val >> 4] + chars[val & 15];
+    });
+  } else {
+    for (let i = 0; i < 16; i++) {
+      hash += chars[Math.floor(Math.random() * 16)];
+    }
+  }
+
+  return `52-${hash}`;
 };
 
 const formatDate = (date) => {
@@ -30,11 +62,6 @@ const PLACEHOLDERS = [
   "這一刻其實沒有問題"
 ];
 
-// 替換為你真實的 Google Form 網址與 entry ID
-const GOOGLE_FORM_BASE_URL = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform";
-const FORM_ENTRY_QUOTE = "entry.123456"; 
-const FORM_ENTRY_SIGNATURE = "entry.789012";
-
 export default function App() {
   const [step, setStep] = useState('home'); // 'home' | 'look' | 'archive' | 'tshirt'
   const [input, setInput] = useState('');
@@ -47,13 +74,13 @@ export default function App() {
   const cardRef = useRef(null);
   const placeholderTimerRef = useRef(null);
 
-  // 時間更新
+  // 時間更新機制
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Placeholder 輪播
+  // Placeholder 跑馬燈輪播
   useEffect(() => {
     if (step === 'look' && showInput) {
       placeholderTimerRef.current = setInterval(() => {
@@ -80,7 +107,8 @@ export default function App() {
       text: input.trim(),
       date: formatDate(now),
       time: formatTime(now),
-      signature: `${generateSignature()}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+      signature: generateSignature(),
+      quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
     });
     setStep('archive');
   };
@@ -88,20 +116,19 @@ export default function App() {
   const handleDownload = async () => {
     if (!cardRef.current) return;
     try {
-      // 確保字體完全載入，避免 Canvas 渲染回退到預設字體
       if (typeof document !== "undefined" && document.fonts?.ready) {
         await document.fonts.ready;
       }
       
       const canvas = await html2canvas(cardRef.current, {
-        scale: 3,
+        scale: 3, 
         backgroundColor: '#0E0E0E',
         logging: false,
       });
       const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = image;
-      link.download = `Look-${momentData.signature}.png`;
+      link.download = `52Moment-${momentData.signature}.png`;
       link.click();
     } catch (err) {
       console.error("圖卡匯出失敗", err);
@@ -109,9 +136,28 @@ export default function App() {
   };
 
   const handlePreorder = () => {
-    // 將使用者輸入與時空簽章作為參數帶入 Google Form URL
-    const url = `${GOOGLE_FORM_BASE_URL}?${FORM_ENTRY_QUOTE}=${encodeURIComponent(momentData.text)}&${FORM_ENTRY_SIGNATURE}=${encodeURIComponent(momentData.signature)}`;
-    window.open(url, '_blank');
+    if (!momentData) return;
+
+    const params = new URLSearchParams({
+      usp: "pp_url",
+      // 暫時代入使用者文字，未來若恢復洗牌功能可改回牌序變數
+      [FORM_ENTRY_DECK]: momentData.text,
+      [FORM_ENTRY_SIGNATURE]: momentData.signature,
+      [FORM_ENTRY_TIME]: `${momentData.date} ${momentData.time}`,
+      [FORM_ENTRY_QUOTE]: momentData.quote || momentData.text,
+  
+      // 預設值，可讓使用者進表單後自行修改
+      [FORM_ENTRY_SIZE]: "M",
+      [FORM_ENTRY_COLOR]: "米白",
+  
+      [FORM_ENTRY_CUSTOM_NOTICE]:
+        "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。",
+  
+      [FORM_ENTRY_PRIVACY_NOTICE]:
+        "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
+    });
+  
+    window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank");
   };
 
   // --- 畫面元件 ---
@@ -121,15 +167,12 @@ export default function App() {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }}
       className="flex flex-col items-center justify-center min-h-screen px-6 text-center"
     >
-      <h1 className="text-5xl md:text-7xl font-bold tracking-[0.2em] mb-4">Look.</h1>
-      <p className="text-xl md:text-2xl font-light tracking-widest text-neutral-400 mb-16">看見這一刻。</p>
+      <h1 className="text-5xl md:text-7xl font-bold tracking-[0.2em] mb-4">52!</h1>
+      <p className="text-xl md:text-2xl font-light tracking-widest text-neutral-400 mb-16">此刻唯一。</p>
       
       <div className="space-y-3 mb-20 text-neutral-500 font-light tracking-wider text-sm md:text-base">
-        <p>Before you think, just see.</p>
-        <p>在思考之前，先看見。</p>
-        <div className="h-4"></div>
-        <p>這一刻正在發生。</p>
-        <p>它不會再重來。</p>
+        <p>你不是在等待奇蹟。</p>
+        <p>你正在經歷一個不會重來的排列。</p>
       </div>
 
       <button 
@@ -186,19 +229,23 @@ export default function App() {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}
       className="flex flex-col items-center justify-center min-h-screen px-6 py-12"
     >
-      {/* 數位 Moment Card */}
       <div 
         ref={cardRef}
         className="w-full max-w-md bg-[#0E0E0E] border border-white/10 p-12 flex flex-col items-center text-center relative overflow-hidden shadow-2xl"
       >
-        <h2 className="text-2xl font-bold tracking-[0.3em] mb-16 text-white/90">LOOK.</h2>
+        <h2 className="text-2xl font-bold tracking-[0.3em] mb-16 text-white/90">52!</h2>
         
         <p className="text-xs tracking-[0.3em] text-neutral-600 mb-8">此刻我看見</p>
-        <p className="text-2xl md:text-3xl font-light leading-relaxed tracking-wider mb-24 text-white/95">
+        
+        <p className="text-2xl md:text-3xl font-light leading-relaxed tracking-wider mb-10 text-white/95">
           「{momentData.text}」
         </p>
+        
+        <p className="text-sm md:text-base font-light leading-relaxed tracking-wider mb-16 text-neutral-400">
+          {momentData.quote}
+        </p>
 
-        <div className="w-full flex flex-col items-center gap-2 font-mono text-[10px] md:text-xs text-neutral-500 tracking-widest">
+        <div className="w-full flex flex-col items-center gap-2 font-mono text-[10px] md:text-xs text-neutral-500 tracking-widest break-all px-4">
           <p>{momentData.date} {momentData.time}</p>
           <p className="mt-4">{momentData.signature}</p>
         </div>
@@ -233,14 +280,12 @@ export default function App() {
       <div className="grid md:grid-cols-2 gap-16 w-full items-center">
         {/* T-Shirt Mockup 區塊 */}
         <div className="relative aspect-[3/4] w-full max-w-sm mx-auto bg-[#111] border border-white/10 flex items-center justify-center overflow-hidden">
-           {/* 背景載入指定的材質底圖 */}
-           <img src="image_8d4358.jpg" alt="Mockup Texture" className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" />
+           <img src="/tshirt-front.png.png" alt="T-shirt Mockup" className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale mix-blend-screen" />
            
-           <div className="relative z-10 flex flex-col items-center text-center p-8">
-             <Shirt size={80} strokeWidth={1} className="text-white/10 mb-8" />
+           <div className="relative z-10 flex flex-col items-center text-center p-8 mt-12">
              <p className="text-[9px] tracking-[0.3em] text-neutral-500 mb-4">此刻我看見</p>
              <p className="text-lg font-light tracking-widest text-white/90">「{momentData.text}」</p>
-             <p className="text-[8px] font-mono text-neutral-600 mt-8 tracking-widest">{momentData.signature}</p>
+             <p className="text-[7px] font-mono text-neutral-600 mt-8 tracking-widest break-all px-4">{momentData.signature}</p>
            </div>
            
            <span className="absolute top-4 right-4 text-[9px] tracking-widest text-neutral-600 border border-neutral-800 px-2 py-1">BACK DESIGN</span>
