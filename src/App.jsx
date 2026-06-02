@@ -63,15 +63,19 @@ const PLACEHOLDERS = [
 ];
 
 export default function App() {
-  const [step, setStep] = useState('home'); // 'home' | 'look' | 'archive' | 'tshirt'
+  const [step, setStep] = useState('home'); 
   const [input, setInput] = useState('');
   const [momentData, setMomentData] = useState(null);
   
   const [showInput, setShowInput] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // 工廠匯出專用的隱藏計數器
+  const [secretClicks, setSecretClicks] = useState(0);
 
   const cardRef = useRef(null);
+  const factoryRef = useRef(null); // 指向隱藏的工廠排版區塊
   const placeholderTimerRef = useRef(null);
 
   // 時間更新機制
@@ -99,6 +103,14 @@ export default function App() {
       setShowInput(false);
     }
   }, [step]);
+
+  // 連點計數器自動歸零 (如果停頓超過 1.5 秒沒點滿)
+  useEffect(() => {
+    if (secretClicks > 0) {
+      const timer = setTimeout(() => setSecretClicks(0), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [secretClicks]);
 
   const handleArchive = () => {
     if (!input.trim()) return;
@@ -132,6 +144,40 @@ export default function App() {
       link.click();
     } catch (err) {
       console.error("圖卡匯出失敗", err);
+    }
+  };
+
+  // --- 隱藏功能：匯出給工廠的透明高解析大圖 ---
+  const handleFactoryExport = async () => {
+    const nextClicks = secretClicks + 1;
+    setSecretClicks(nextClicks);
+    
+    if (nextClicks >= 5) {
+      setSecretClicks(0); // 觸發後歸零
+      if (!factoryRef.current || !momentData) return;
+      
+      try {
+        if (typeof document !== "undefined" && document.fonts?.ready) {
+          await document.fonts.ready;
+        }
+        
+        // 生成工廠級別大圖 (高解析度、全透明背景)
+        const canvas = await html2canvas(factoryRef.current, {
+          scale: 4, // 非常大的解析度，適合直印
+          backgroundColor: null, // 透明背景
+          logging: false,
+        });
+        
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `FACTORY-PRINT-${momentData.signature}.png`;
+        link.click();
+        
+        alert("已為您匯出工廠專用高解析透明印刷檔。");
+      } catch (err) {
+        console.error("工廠圖檔匯出失敗", err);
+      }
     }
   };
 
@@ -288,7 +334,13 @@ export default function App() {
              <p className="text-[7px] font-mono text-neutral-600 mt-8 tracking-widest break-all px-4">{momentData.signature}</p>
            </div>
            
-           <span className="absolute top-4 right-4 text-[9px] tracking-widest text-neutral-600 border border-neutral-800 px-2 py-1">BACK DESIGN</span>
+           {/* 連點 5 次此標籤，觸發隱藏的工廠匯出功能 */}
+           <span 
+             onClick={handleFactoryExport}
+             className="absolute top-4 right-4 text-[9px] tracking-widest text-neutral-600 border border-neutral-800 px-2 py-1 cursor-pointer hover:bg-white/5 transition-colors"
+           >
+             BACK DESIGN
+           </span>
         </div>
 
         {/* 商品文案與結帳區塊 */}
@@ -322,6 +374,26 @@ export default function App() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0E0E0E] text-[#D4D4D4] selection:bg-white/30 font-sans">
+      
+      {/* 隱藏在畫面之外：專給工廠渲染的高解析度畫布 */}
+      {momentData && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <div 
+            ref={factoryRef} 
+            className="flex flex-col items-center justify-center font-sans text-[#FFFFFF]" 
+            style={{ width: '1200px', height: '1600px', backgroundColor: 'transparent', padding: '100px' }}
+          >
+            <p style={{ fontSize: '32px', letterSpacing: '0.3em', marginBottom: '80px', color: '#FFFFFF' }}>此刻我看見</p>
+            <p style={{ fontSize: '110px', fontWeight: 300, letterSpacing: '0.1em', marginBottom: '160px', color: '#FFFFFF', textAlign: 'center', lineHeight: '1.4' }}>
+              「{momentData.text}」
+            </p>
+            <p style={{ fontSize: '32px', fontFamily: 'monospace', letterSpacing: '0.2em', color: '#FFFFFF' }}>
+              {momentData.signature}
+            </p>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {step === 'home' && <HomeView key="home" />}
         {step === 'look' && <LookView key="look" />}
