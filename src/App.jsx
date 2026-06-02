@@ -12,7 +12,6 @@ const FORM_ENTRY_SIGNATURE = "entry.1745604772";
 const FORM_ENTRY_TIME = "entry.284034277";
 const FORM_ENTRY_QUOTE = "entry.369992627";
 
-// 暫時保留，供未來表單擴充使用
 const FORM_ENTRY_SIZE = "entry.508788419";
 const FORM_ENTRY_COLOR = "entry.1607852062";
 const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
@@ -46,13 +45,20 @@ const formatTime = (date) => {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 };
 
+// 升級版 Placeholder：更有人味
 const PLACEHOLDERS = [
-  "焦慮只是焦慮",
-  "窗外的雨",
+  "窗外下著雨",
   "媽媽老了",
-  "我還活著",
+  "我有點累",
+  "我正在焦慮",
+  "我想她了",
+  "今天其實很好",
   "自己又在編故事",
-  "這一刻其實沒有問題"
+  "這一刻其實沒有問題",
+  "原來我一直在害怕",
+  "其實我只是想被理解",
+  "我還活著",
+  "今天的風很舒服"
 ];
 
 export default function App() {
@@ -64,19 +70,18 @@ export default function App() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   
+  const [isArchiving, setIsArchiving] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
 
   const cardRef = useRef(null);
   const factoryRef = useRef(null); 
   const placeholderTimerRef = useRef(null);
 
-  // 時鐘更新
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Placeholder 輪播
   useEffect(() => {
     if (step === 'look' && showInput) {
       placeholderTimerRef.current = setInterval(() => {
@@ -86,17 +91,16 @@ export default function App() {
     }
   }, [step, showInput]);
 
-  // 延遲顯示輸入框
   useEffect(() => {
     if (step === 'look') {
       const timer = setTimeout(() => setShowInput(true), 3500);
       return () => clearTimeout(timer);
     } else {
       setShowInput(false);
+      setIsArchiving(false);
     }
   }, [step]);
 
-  // 工廠連點計數器歸零
   useEffect(() => {
     if (secretClicks > 0) {
       const timer = setTimeout(() => setSecretClicks(0), 1500);
@@ -105,16 +109,21 @@ export default function App() {
   }, [secretClicks]);
 
   const handleArchive = () => {
-    if (!input.trim()) return;
-    const now = new Date();
-    setMomentData({
-      text: input.trim(),
-      date: formatDate(now),
-      time: formatTime(now),
-      signature: generateSignature(),
-      quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
-    });
-    setStep('archive');
+    if (!input.trim() || isArchiving) return;
+    
+    setIsArchiving(true);
+    
+    setTimeout(() => {
+      const now = new Date();
+      setMomentData({
+        text: input.trim(),
+        date: formatDate(now),
+        time: formatTime(now),
+        signature: generateSignature(),
+        quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
+      });
+      setStep('archive');
+    }, 1200);
   };
 
   const handleDownload = async () => {
@@ -167,6 +176,7 @@ export default function App() {
 
   const handlePreorder = () => {
     if (!momentData) return;
+    // 前端一鍵代入：消滅「人工整理牌序」的內耗
     const params = new URLSearchParams({
       usp: "pp_url",
       [FORM_ENTRY_DECK]: momentData.text,
@@ -175,14 +185,14 @@ export default function App() {
       [FORM_ENTRY_QUOTE]: momentData.quote || momentData.text,
       [FORM_ENTRY_SIZE]: "M",
       [FORM_ENTRY_COLOR]: "米白",
-      [FORM_ENTRY_CUSTOM_NOTICE]: "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。",
+      [FORM_ENTRY_CUSTOM_NOTICE]: "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。", // 貨到付款（COD）拒收防禦：心理上篩選掉不誠實的低質量訂單
       [FORM_ENTRY_PRIVACY_NOTICE]: "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
     });
     window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank");
   };
 
   // ==========================================
-  // 畫面渲染函數 (防止閃爍)
+  // 畫面渲染函數
   // ==========================================
 
   const renderHomeView = () => (
@@ -212,11 +222,12 @@ export default function App() {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }}
       className="flex flex-col items-center justify-center min-h-screen px-6 w-full max-w-2xl mx-auto"
     >
-      <div className={`text-center transition-all duration-1000 ${showInput ? 'mb-24 opacity-40' : 'mb-0 opacity-100'}`}>
+      <div className={`text-center transition-all duration-1000 ${showInput ? 'mb-12 opacity-30' : 'mb-0 opacity-100'}`}>
         <p className="text-lg text-neutral-400 font-mono tracking-widest mb-2">{formatDate(currentTime)}</p>
         <p className="text-4xl font-mono tracking-widest text-white/90">{formatTime(currentTime)}</p>
         {!showInput && <p className="mt-10 text-neutral-500 tracking-widest font-light animate-pulse">這一刻，不會再重來。</p>}
       </div>
+
       <AnimatePresence>
         {showInput && (
           <motion.div 
@@ -224,22 +235,46 @@ export default function App() {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}
             className="w-full flex flex-col items-center"
           >
-            <p className="text-neutral-500 tracking-[0.2em] mb-6 text-sm">此刻我看見</p>
+            {/* 認知解壓縮的引導文案 */}
+            <div className="text-neutral-500 font-light tracking-[0.15em] text-sm mb-12 text-center flex flex-col items-center">
+              <p className="mb-2">這不是創作。</p>
+              <p className="mb-2">不是願望。</p>
+              <p>不是名言。</p>
+              
+              <div className="h-6"></div>
+              
+              <p className="mb-2">只是誠實寫下，</p>
+              <p>此刻最真實的一件事。</p>
+              
+              <div className="h-6"></div>
+
+              <p className="mb-2">也許是一個念頭。</p>
+              <p className="mb-2">也許是一個事實。</p>
+              <p>也許只是一種感受。</p>
+
+              <div className="h-8"></div>
+              
+              <p className="text-neutral-300 tracking-[0.2em]">你看見了什麼？</p>
+            </div>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               maxLength={40}
+              disabled={isArchiving}
               placeholder={PLACEHOLDERS[placeholderIndex]}
-              className="w-full bg-transparent border-b border-white/20 pb-4 text-center text-2xl md:text-3xl text-white placeholder-neutral-800 focus:outline-none focus:border-white/60 transition-colors font-light tracking-wide"
+              className="w-full bg-transparent border-b border-white/20 pb-4 text-center text-2xl md:text-3xl text-white placeholder-neutral-800 focus:outline-none focus:border-white/60 transition-colors font-light tracking-wide disabled:opacity-50"
               autoFocus
             />
+            
+            {/* 極簡有力的按鈕 */}
             <button 
               onClick={handleArchive}
-              disabled={!input.trim()}
-              className="mt-16 px-8 py-3 bg-white text-black hover:bg-neutral-200 disabled:opacity-0 transition-all duration-700 tracking-[0.2em] text-sm"
+              disabled={!input.trim() || isArchiving}
+              className="mt-16 px-12 py-4 bg-white text-black hover:bg-neutral-200 disabled:opacity-0 transition-all duration-700 tracking-[0.3em] text-sm"
             >
-              封存這一刻
+              {isArchiving ? '封存中...' : '我看見了'}
             </button>
           </motion.div>
         )}
@@ -357,6 +392,15 @@ export default function App() {
           </div>
         </div>
       )}
+      <AnimatePresence mode="wait">
+        {step === 'home' && renderHomeView()}
+        {step === 'look' && renderLookView()}
+        {step === 'archive' && renderArchiveView()}
+        {step === 'tshirt' && renderTShirtView()}
+      </AnimatePresence>
+    </div>
+  );
+}
       <AnimatePresence mode="wait">
         {step === 'home' && renderHomeView()}
         {step === 'look' && renderLookView()}
