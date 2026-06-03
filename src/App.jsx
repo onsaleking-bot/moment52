@@ -579,6 +579,235 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
   );
 };
 
+const ProductMockup = ({ data }) => (
+  <div className="flex flex-col">
+    <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
+      Product Mockup
+    </p>
+
+    <div className="relative flex aspect-[3/4] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
+      <img
+        src={TSHIRT_MOCKUP_SRC}
+        alt="T-shirt Mockup"
+        className="absolute inset-0 h-full w-full object-cover opacity-35 grayscale mix-blend-screen"
+      />
+
+      <div className="relative z-10 flex flex-col items-center text-center">
+        <p className="mb-5 text-4xl font-bold tracking-[0.35em] text-white/85">
+          52!
+        </p>
+        <p className="text-xs uppercase tracking-[0.45em] text-neutral-400">
+          Look.
+        </p>
+      </div>
+
+      <div className="absolute bottom-5 left-5 right-5 border-t border-white/10 pt-4">
+        <p className="text-center text-[9px] uppercase tracking-[0.25em] text-neutral-600">
+          Front concept preview
+        </p>
+      </div>
+    </div>
+
+    <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+      商品示意圖只呈現衣服本體與正面極簡識別；完整客製內容不在這裡堆疊。
+    </p>
+  </div>
+);
+
+const ArtworkPreview = ({ data, deckRows, onFactoryExport }) => (
+  <div className="flex flex-col">
+    <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
+      Artwork Preview
+    </p>
+
+    <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden border border-white/10 bg-[#0E0E0E] p-8 text-center shadow-[0_0_50px_rgba(0,0,0,0.45)]">
+      <div>
+        <p className="mb-8 text-3xl font-bold tracking-[0.35em] text-white/90">
+          52!
+        </p>
+
+        <div className="mb-8 border border-white/20 px-6 py-10">
+          <p className="mb-8 text-3xl font-light uppercase tracking-[0.35em] text-white/90">
+            Look.
+          </p>
+
+          <p className="break-all text-3xl font-light leading-snug tracking-widest text-white/95 md:text-4xl">
+            「{data.text}」
+          </p>
+        </div>
+
+        <p className="mb-3 text-[8px] uppercase tracking-[0.35em] text-neutral-600">
+          Space-Time Signature
+        </p>
+
+        <p className="mb-8 font-mono text-[11px] tracking-widest text-neutral-300 md:text-xs">
+          {data.signature}
+        </p>
+
+        {deckRows.length > 0 && (
+          <div className="mb-8 space-y-1 font-mono text-[6px] leading-relaxed tracking-wider text-neutral-500 md:text-[7px]">
+            {deckRows.map((row, index) => (
+              <p key={`artwork-row-${index}`}>{row.join(" ")}</p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div className="mx-auto mb-6 h-px w-32 bg-white/10" />
+
+        <p className="text-[8px] uppercase tracking-[0.35em] text-neutral-500">
+          This moment will never happen again.
+        </p>
+      </div>
+
+      <button
+        onClick={onFactoryExport}
+        className="absolute right-4 top-4 border border-white/10 px-2 py-1 text-[8px] uppercase tracking-[0.25em] text-neutral-600 transition-colors hover:bg-white/5 hover:text-neutral-300"
+      >
+        Artwork File
+      </button>
+    </div>
+
+    <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+      這是實際客製化圖案的設計預覽；重點是 Look 的觀看框，而不是單純資料堆疊。
+    </p>
+  </div>
+);
+
+const HiddenFactoryArtwork = React.forwardRef(({ data, deckRows }, ref) => (
+  <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+    <div
+      ref={ref}
+      className="flex flex-col items-center justify-between font-sans text-[#FFFFFF]"
+      style={{
+        width: "1200px",
+        height: "1600px",
+        backgroundColor: "transparent",
+        padding: "110px"
+      }}
+    >
+      <div style={{ width: "100%", textAlign: "center" }}>
+        <p
+          style={{
+            fontSize: "86px",
+            fontWeight: 700,
+            letterSpacing: "0.35em",
+            color: "#FFFFFF",
+            marginBottom: "110px"
+          }}
+        >
+          52!
+        </p>
+
+        <div
+          style={{
+            width: "100%",
+            border: "2px solid rgba(255,255,255,0.75)",
+            padding: "110px 70px",
+            marginBottom: "90px"
+          }}
+        >
+          <p
+            style={{
+              fontSize: "72px",
+              fontWeight: 300,
+              letterSpacing: "0.35em",
+              textTransform: "uppercase",
+              color: "#FFFFFF",
+              marginBottom: "90px"
+            }}
+          >
+            LOOK.
+          </p>
+
+          <p
+            style={{
+              fontSize: "100px",
+              fontWeight: 300,
+              letterSpacing: "0.08em",
+              color: "#FFFFFF",
+              textAlign: "center",
+              lineHeight: "1.35",
+              margin: 0
+            }}
+          >
+            「{data.text}」
+          </p>
+        </div>
+
+        <p
+          style={{
+            fontSize: "24px",
+            letterSpacing: "0.35em",
+            color: "#888888",
+            marginBottom: "20px"
+          }}
+        >
+          SPACE-TIME SIGNATURE
+        </p>
+
+        <p
+          style={{
+            fontSize: "34px",
+            fontFamily: "monospace",
+            letterSpacing: "0.18em",
+            color: "#FFFFFF",
+            marginBottom: "90px"
+          }}
+        >
+          {data.signature}
+        </p>
+
+        {deckRows.length > 0 && (
+          <div
+            style={{
+              width: "100%",
+              marginBottom: "90px",
+              fontFamily: "monospace",
+              fontSize: "24px",
+              letterSpacing: "0.12em",
+              lineHeight: "1.8",
+              color: "#BBBBBB",
+              textAlign: "center"
+            }}
+          >
+            {deckRows.map((row, index) => (
+              <p key={`factory-row-${index}`} style={{ margin: 0 }}>
+                {row.join(" ")}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ width: "100%", textAlign: "center" }}>
+        <div
+          style={{
+            width: "260px",
+            height: "1px",
+            backgroundColor: "rgba(255,255,255,0.35)",
+            margin: "0 auto 70px"
+          }}
+        />
+
+        <p
+          style={{
+            fontSize: "26px",
+            letterSpacing: "0.25em",
+            color: "#888888",
+            margin: 0
+          }}
+        >
+          THIS MOMENT WILL NEVER HAPPEN AGAIN
+        </p>
+      </div>
+    </div>
+  </div>
+));
+
+HiddenFactoryArtwork.displayName = "HiddenFactoryArtwork";
+
 const TShirtView = ({ data, onBack }) => {
   const [secretClicks, setSecretClicks] = useState(0);
   const factoryRef = useRef(null);
@@ -652,75 +881,58 @@ const TShirtView = ({ data, onBack }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 1 }}
-        className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center px-6 py-12"
+        className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-6 py-12"
       >
-        <div className="grid w-full items-center gap-16 md:grid-cols-2">
-          <div className="relative mx-auto flex aspect-[3/4] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
-            <img
-              src={TSHIRT_MOCKUP_SRC}
-              alt="T-shirt Mockup"
-              className="absolute inset-0 h-full w-full object-cover opacity-30 grayscale mix-blend-screen"
-            />
+        <div className="mb-14 text-center">
+          <p className="mb-4 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+            T-Shirt
+          </p>
 
-            <div className="relative z-10 flex w-full flex-col items-center p-8 text-center">
-              <p className="mb-10 text-3xl font-bold tracking-[0.35em] text-white/85">
-                52!
-              </p>
+          <h2 className="mb-6 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+            把一個瞬間穿在身上。
+          </h2>
 
-              <p className="mb-2 text-[8px] uppercase tracking-[0.35em] text-neutral-600">
-                Space-Time Signature
-              </p>
+          <p className="mx-auto max-w-2xl text-sm font-light leading-relaxed tracking-wider text-neutral-500 md:text-base">
+            商品示意與客製化圖案分開顯示。衣服本身保持安靜，真正的紀錄留在專屬圖案裡。
+          </p>
+        </div>
 
-              <p className="mb-10 font-mono text-[11px] tracking-widest text-neutral-300 md:text-xs">
-                {data.signature}
-              </p>
+        <div className="grid w-full gap-10 lg:grid-cols-[1fr_1fr_0.85fr]">
+          <ProductMockup data={data} />
 
-              {deckRows.length > 0 && (
-                <div className="mb-12 w-full max-w-xs space-y-1 font-mono text-[6px] leading-relaxed tracking-wider text-neutral-500 md:text-[7px]">
-                  {deckRows.map((row, index) => (
-                    <p key={`mockup-row-${index}`}>{row.join(" ")}</p>
-                  ))}
-                </div>
-              )}
+          <ArtworkPreview
+            data={data}
+            deckRows={deckRows}
+            onFactoryExport={handleFactoryExport}
+          />
 
-              <div className="mb-12 h-px w-32 bg-white/10" />
-
-              <p className="mb-8 text-[9px] tracking-[0.35em] text-neutral-400 md:text-[10px]">
-                THIS MOMENT WILL NEVER HAPPEN AGAIN
-              </p>
-
-              <p className="break-all px-2 text-3xl font-light leading-snug tracking-widest text-white/95 md:text-4xl">
-                「{data.text}」
-              </p>
-            </div>
-
-            <span
-              onClick={handleFactoryExport}
-              className="absolute right-4 top-4 cursor-pointer border border-neutral-800 px-2 py-1 text-[9px] tracking-widest text-neutral-600 transition-colors hover:bg-white/5"
-            >
-              BACK DESIGN
-            </span>
-          </div>
-
-          <div className="flex flex-col items-start text-left">
-            <h2 className="mb-8 text-2xl font-light tracking-[0.2em] md:text-3xl">
-              把一個瞬間穿在身上。
-            </h2>
-
-            <div className="mb-12 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
-              <p>這不是一句標語。</p>
-              <p>而是一個再也不會重複的時刻。</p>
-              <p>52! 記錄了那一刻的牌序與時空簽章。</p>
-              <p>而這句話，記錄了那一刻的你。</p>
-            </div>
-
-            <p className="mb-10 text-xs font-light leading-relaxed tracking-wider text-neutral-500">
-              * 點擊預購將前往訂製表單，您的專屬牌序、時空簽章、此刻文字與當下金句將會自動帶入。
+          <div className="flex flex-col justify-center text-left">
+            <p className="mb-6 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
+              Order
             </p>
+
+            <h3 className="mb-8 text-2xl font-light leading-relaxed tracking-[0.18em] text-white/90">
+              這不是一句標語。
+              <br />
+              是一個被看見的瞬間。
+            </h3>
+
+            <div className="mb-10 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
+              <p>正面保留 52! 與 Look. 的極簡識別。</p>
+              <p>客製化圖案保存牌序、時空簽章與此刻文字。</p>
+              <p>每一件都來自一次不可重複的生成。</p>
+            </div>
+
+            <div className="mb-10 border-y border-white/10 py-6 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+              <p>Space-Time Signature</p>
+              <p className="mt-2 font-mono text-neutral-400">{data.signature}</p>
+              <p className="mt-5">此刻我看見</p>
+              <p className="mt-2 text-neutral-400">「{data.text}」</p>
+            </div>
 
             <button
               onClick={handlePreorder}
-              className="mb-6 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200 md:w-auto"
+              className="mb-6 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200"
             >
               前往預購 <ArrowRight size={16} />
             </button>
@@ -731,111 +943,15 @@ const TShirtView = ({ data, onBack }) => {
             >
               ← 返回觀看紀錄
             </button>
+
+            <p className="mt-8 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+              * 點擊預購將前往訂製表單，專屬牌序、時空簽章、此刻文字與當下金句會自動帶入。
+            </p>
           </div>
         </div>
       </motion.div>
 
-      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-        <div
-          ref={factoryRef}
-          className="flex flex-col items-center justify-center font-sans text-[#FFFFFF]"
-          style={{
-            width: "1200px",
-            height: "1600px",
-            backgroundColor: "transparent",
-            padding: "100px"
-          }}
-        >
-          <p
-            style={{
-              fontSize: "80px",
-              fontWeight: 700,
-              letterSpacing: "0.3em",
-              color: "#FFFFFF",
-              marginBottom: "80px"
-            }}
-          >
-            52!
-          </p>
-
-          <p
-            style={{
-              fontSize: "22px",
-              letterSpacing: "0.35em",
-              color: "#888888",
-              marginBottom: "20px"
-            }}
-          >
-            SPACE-TIME SIGNATURE
-          </p>
-
-          <p
-            style={{
-              fontSize: "34px",
-              fontFamily: "monospace",
-              letterSpacing: "0.18em",
-              color: "#FFFFFF",
-              marginBottom: "90px"
-            }}
-          >
-            {data.signature}
-          </p>
-
-          {deckRows.length > 0 && (
-            <div
-              style={{
-                width: "100%",
-                marginBottom: "120px",
-                fontFamily: "monospace",
-                fontSize: "24px",
-                letterSpacing: "0.12em",
-                lineHeight: "1.8",
-                color: "#BBBBBB",
-                textAlign: "center"
-              }}
-            >
-              {deckRows.map((row, index) => (
-                <p key={`factory-row-${index}`} style={{ margin: 0 }}>
-                  {row.join(" ")}
-                </p>
-              ))}
-            </div>
-          )}
-
-          <div
-            style={{
-              width: "240px",
-              height: "1px",
-              backgroundColor: "rgba(255,255,255,0.2)",
-              marginBottom: "80px"
-            }}
-          />
-
-          <p
-            style={{
-              fontSize: "26px",
-              letterSpacing: "0.25em",
-              marginBottom: "70px",
-              color: "#888888"
-            }}
-          >
-            THIS MOMENT WILL NEVER HAPPEN AGAIN
-          </p>
-
-          <p
-            style={{
-              fontSize: "100px",
-              fontWeight: 300,
-              letterSpacing: "0.1em",
-              color: "#FFFFFF",
-              textAlign: "center",
-              lineHeight: "1.4"
-            }}
-          >
-            「{data.text}」
-          </p>
-        </div>
-      </div>
+      <HiddenFactoryArtwork ref={factoryRef} data={data} deckRows={deckRows} />
     </>
   );
 };
