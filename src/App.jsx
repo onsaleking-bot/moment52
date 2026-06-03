@@ -25,9 +25,9 @@ const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`))
 
 const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
 const TSHIRT_IMAGES = {
-  blackSet: "/images/tshirt-black-gothic-set.png",
-  blackBack: "/images/tshirt-black-gothic-back.png",
-  creamSet: "/images/tshirt-cream-renaissance-set.png"
+  blackSet: "/images/tshirt-black-gothic-set.png.png",
+  blackBack: "/images/tshirt-black-gothic-back.png.png",
+  creamSet: "/images/tshirt-cream-renaissance-set.png.png"
 };
 const STORAGE_KEYS = {
   sound: "m52_sound_enabled",
@@ -503,7 +503,7 @@ function ShirtMockup({ moment }) {
           className="block h-auto w-full object-cover"
         />
 
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="mt-[4%] w-[31%] translate-x-[17%] text-center text-[#F3F1EA]">
             <div className="text-[0.55rem] tracking-[0.24em]">52!</div>
 
@@ -521,7 +521,8 @@ function ShirtMockup({ moment }) {
 
             <div className="mt-7 break-all font-mono text-[0.38rem] leading-relaxed tracking-[0.06em] text-[#C8C4B8]">
               SPACE-TIME SIGNATURE
-              <br />#{signature}
+              <br />
+              {"#" + signature}
             </div>
 
             <div className="mt-7 text-[0.34rem] tracking-[0.16em] text-[#8C887F]">
@@ -538,7 +539,7 @@ function ShirtMockup({ moment }) {
             alt="Black T-shirt set"
             className="aspect-[4/3] w-full object-cover"
           />
-          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
             Black / Set
           </div>
         </div>
@@ -549,7 +550,7 @@ function ShirtMockup({ moment }) {
             alt="Black T-shirt back"
             className="aspect-[4/3] w-full object-cover"
           />
-          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
             Black / Back
           </div>
         </div>
@@ -560,7 +561,7 @@ function ShirtMockup({ moment }) {
             alt="Cream T-shirt set"
             className="aspect-[4/3] w-full object-cover"
           />
-          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
             Cream / Set
           </div>
         </div>
