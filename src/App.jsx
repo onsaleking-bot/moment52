@@ -1,1044 +1,1238 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import html2canvas from "html2canvas";
-import { ArrowRight, Download } from "lucide-react";
-import { QUOTES } from "./quotes";
-
-// --- Google Form ---
-const GOOGLE_FORM_BASE_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform";
-
-const FORM_ENTRY_DECK = "entry.907849226";
-const FORM_ENTRY_SIGNATURE = "entry.1745604772";
-const FORM_ENTRY_TIME = "entry.284034277";
-const FORM_ENTRY_MOMENT_TEXT = "entry.936038985";
-const FORM_ENTRY_QUOTE = "entry.369992627";
-const FORM_ENTRY_SIZE = "entry.508788419";
-const FORM_ENTRY_COLOR = "entry.1607852062";
-const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
-const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
-
-const TSHIRT_IMAGES = {
-  blackSet: "/images/tshirt-black-gothic-set.png.png",
-  blackBack: "/images/tshirt-black-gothic-back.png.png",
-  creamSet: "/images/tshirt-cream-renaissance-set.png.png"
-};
-
-const PRICE = "NT$1,280";
-const SHIPPING_TIME = "7–14 個工作天";
-
-const FACTORIAL_52 =
-  "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
-
-const CUSTOM_PRODUCT_NOTICE =
-  "我了解本商品為個人化客製商品，將依本人於 52! 網站生成之牌序、Space-Time Signature、生成時間、此刻文字、當下金句與所選款式製作。我了解本商品採全額預付製作。表單送出後，客服將再次確認尺寸、顏色、收件資料與客製內容；完成付款並經確認後，訂單始正式成立並進入製作流程。我了解訂單正式成立後，除商品瑕疵、印刷錯誤或寄送錯誤外，不接受任意取消、退換貨。因本商品係依消費者要求所為之個人化客製商品，並已於訂購前明確告知，將排除七日解除權之適用。";
-
-const PRIVACY_NOTICE =
-  "本表單所蒐集之姓名、電話、Line 帳號或 Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。";
-
-const PLACEHOLDERS = [
-  "窗外下著雨",
-  "媽媽老了",
-  "我有點累",
-  "我正在焦慮",
-  "我想她了",
-  "今天其實很好",
-  "自己又在編故事",
-  "這一刻其實沒有問題",
-  "原來我一直在害怕",
-  "其實我只是想被理解",
-  "我還活著",
-  "今天的風很舒服",
-  "我不知道",
-  "我正在等待"
-];
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Archive,
+  ArrowRight,
+  Camera,
+  Copy,
+  Download,
+  Eye,
+  Lock,
+  Menu,
+  Mic,
+  RotateCcw,
+  Share2,
+  Shirt,
+  ShoppingBag,
+  Volume2,
+  VolumeX,
+  X
+} from "lucide-react";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
 
-const ARTICLES = {
-  about: {
-    eyebrow: "About 52!",
-    title: "為什麼是 52!",
-    cta: "看見此刻",
-    blocks: [
-      { type: "p", text: "一副撲克牌共有 52 張。" },
-      { type: "p", text: "完全隨機洗牌後，可能產生 52! 種排列。" },
-      { type: "p", text: "這個數量遠遠超過宇宙中的恆星數量。" },
-      { type: "factorial" },
-      { type: "p", text: "因此，你看到的排列，幾乎不會再次出現。" },
-      { type: "p", text: "正如這個瞬間。" },
-      { type: "p", text: "它正在發生。" },
-      { type: "p", text: "然後永遠消失。" }
-    ]
-  },
-  look: {
-    eyebrow: "Look.",
-    title: "為什麼不是 See？",
-    cta: "開始觀看",
-    blocks: [
-      { type: "p", text: "因為 See 是被動的。" },
-      { type: "p", text: "你看見下雨。" },
-      { type: "p", text: "你看見訊息未回。" },
-      { type: "p", text: "你看見事情發生。" },
-      { type: "space" },
-      { type: "p", text: "而 Look 是主動的。" },
-      { type: "p", text: "看看這一刻。" },
-      { type: "p", text: "看看自己正在想什麼。" },
-      { type: "p", text: "看看自己是否正在替事情編造故事。" },
-      { type: "p", text: "看看自己是否正在害怕。" },
-      { type: "p", text: "看看自己是否正在期待。" },
-      { type: "space" },
-      { type: "p", text: "52! 不是為了給你答案。" },
-      { type: "p", text: "而是邀請你停下來觀看。" },
-      { type: "p", text: "Look.", highlight: true }
-    ]
-  },
-  solitude: {
-    eyebrow: "Essay",
-    title: "關於孤獨",
-    cta: "看見此刻",
-    blocks: [
-      { type: "p", text: "多數人活在自己的內心。" },
-      { type: "p", text: "讀著自己的劇本。" },
-      { type: "space" },
-      { type: "p", text: "於是孤獨並不是沒有人陪伴。" },
-      { type: "p", text: "而是很少有人願意一起觀看。" },
-      { type: "space" },
-      { type: "p", text: "看見事實。" },
-      { type: "p", text: "看見恐懼。" },
-      { type: "p", text: "看見期待。" },
-      { type: "p", text: "看見自己。" },
-      { type: "space" },
-      { type: "p", text: "真正的觀看無法被說服。" },
-      { type: "p", text: "只能被發現。" },
-      { type: "p", text: "Look.", highlight: true }
-    ]
-  }
+const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
+
+const STORAGE_KEYS = {
+  sound: "m52_sound_enabled",
+  archive: "m52_look_archive_private"
 };
 
-const createDeck = () =>
-  SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
+const GOOGLE_FORM_CONFIG = {
+  baseUrl:
+    "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform",
+  entryDeck: "entry.907849226",
+  entrySignature: "entry.1745604772",
+  entryTime: "entry.284034277",
+  entryLookText: "entry.936038985",
+  entryQuote: "entry.369992627"
+};
 
-const getRandomInt = (maxExclusive) => {
+let sharedAudioContext = null;
+
+function isBrowser() {
+  return typeof window !== "undefined";
+}
+
+function loadBoolean(key, fallback = true) {
+  if (!isBrowser()) return fallback;
+  try {
+    const value = window.localStorage.getItem(key);
+    if (value === null) return fallback;
+    return value === "true";
+  } catch {
+    return fallback;
+  }
+}
+
+function loadJson(key, fallback) {
+  if (!isBrowser()) return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson(key, value) {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function saveString(key, value) {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(key, String(value));
+  } catch {}
+}
+
+function secureRandomInt(maxExclusive) {
   if (maxExclusive <= 0) return 0;
 
-  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
-    const range = 0xffffffff + 1;
-    const limit = Math.floor(range / maxExclusive) * maxExclusive;
+  if (isBrowser() && window.crypto?.getRandomValues) {
     const array = new Uint32Array(1);
+    const maxUint = 0xffffffff;
+    const limit = Math.floor(maxUint / maxExclusive) * maxExclusive;
 
+    let value;
     do {
       window.crypto.getRandomValues(array);
-    } while (array[0] >= limit);
+      value = array[0];
+    } while (value >= limit);
 
-    return array[0] % maxExclusive;
+    return value % maxExclusive;
   }
 
   return Math.floor(Math.random() * maxExclusive);
-};
+}
 
-const shuffleDeck = () => {
-  const deck = createDeck();
+function shuffleDeck() {
+  const deck = [...BASE_DECK];
 
   for (let i = deck.length - 1; i > 0; i -= 1) {
-    const j = getRandomInt(i + 1);
+    const j = secureRandomInt(i + 1);
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
   return deck;
-};
+}
 
-const chunkArray = (array, size) => {
-  const chunks = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
+function createSignature(text, deck, isoTime) {
+  const raw = `${text}|${deck.join("")}|${isoTime}`;
+  let hash = 0xcbf29ce484222325n;
+  const prime = 0x100000001b3n;
+
+  for (let i = 0; i < raw.length; i += 1) {
+    hash ^= BigInt(raw.charCodeAt(i));
+    hash = BigInt.asUintN(64, hash * prime);
   }
-  return chunks;
-};
 
-const generateSignature = () => {
-  const chars = "0123456789ABCDEF";
-  let hash = "";
+  return hash.toString(16).toUpperCase().padStart(16, "0");
+}
 
-  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
-    const array = new Uint8Array(8);
-    window.crypto.getRandomValues(array);
-    array.forEach((val) => {
-      hash += chars[val >> 4] + chars[val & 15];
-    });
-  } else {
-    for (let i = 0; i < 16; i += 1) {
-      hash += chars[Math.floor(Math.random() * 16)];
+function formatDateLabel(date) {
+  return new Intl.DateTimeFormat("zh-TW", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+function formatTimeLabel(date) {
+  return new Intl.DateTimeFormat("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(date);
+}
+
+function formatFullTimeLabel(date) {
+  return new Intl.DateTimeFormat("zh-TW", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(date);
+}
+
+function compactDate(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("");
+}
+
+function compactTime(date) {
+  return [
+    String(date.getHours()).padStart(2, "0"),
+    String(date.getMinutes()).padStart(2, "0"),
+    String(date.getSeconds()).padStart(2, "0")
+  ].join("");
+}
+
+function deckLines(deck) {
+  return [
+    deck.slice(0, 13).join(" · "),
+    deck.slice(13, 26).join(" · "),
+    deck.slice(26, 39).join(" · "),
+    deck.slice(39, 52).join(" · ")
+  ];
+}
+
+function splitCanvasText(ctx, text, maxWidth) {
+  const chars = Array.from(text);
+  const lines = [];
+  let current = "";
+
+  chars.forEach((char) => {
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = char;
+    } else {
+      current = test;
     }
+  });
+
+  if (current) lines.push(current);
+  return lines;
+}
+
+async function playMuseumTone() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    if (!sharedAudioContext) sharedAudioContext = new AudioContext();
+    const ctx = sharedAudioContext;
+
+    if (ctx.state === "suspended") await ctx.resume();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(196, ctx.currentTime);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(900, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.4);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 1.45);
+  } catch {}
+}
+
+function buildOrderUrl(moment) {
+  if (!moment) return GOOGLE_FORM_CONFIG.baseUrl;
+
+  const params = new URLSearchParams();
+
+  params.append(GOOGLE_FORM_CONFIG.entryDeck, moment.deck.join(" · "));
+  params.append(GOOGLE_FORM_CONFIG.entrySignature, `#${moment.signature}`);
+  params.append(GOOGLE_FORM_CONFIG.entryTime, moment.fullTimeLabel);
+  params.append(GOOGLE_FORM_CONFIG.entryLookText, moment.text);
+  params.append(GOOGLE_FORM_CONFIG.entryQuote, "LOOK. / TEXT ARCHIVE");
+
+  return `${GOOGLE_FORM_CONFIG.baseUrl}?${params.toString()}`;
+}
+
+async function copyText(text) {
+  if (!isBrowser()) return false;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
   }
+}
 
-  return `52-${hash}`;
-};
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
-const formatDate = (date) => {
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
-};
-
-const formatTime = (date) => {
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-};
-
-const exportElementAsPng = async (element, filename, options = {}) => {
-  if (!element) return;
-
+async function renderMomentCard(moment) {
   if (typeof document !== "undefined" && document.fonts?.ready) {
     await document.fonts.ready;
   }
 
-  const canvas = await html2canvas(element, {
-    scale: options.scale ?? 3,
-    backgroundColor: options.backgroundColor ?? "#0E0E0E",
-    logging: false
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) throw new Error("Canvas not supported");
+
+  canvas.width = 1400;
+  canvas.height = 1800;
+
+  ctx.fillStyle = "#F3F1EA";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "#171717";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(72, 72, canvas.width - 144, canvas.height - 144);
+
+  ctx.fillStyle = "#171717";
+  ctx.textAlign = "left";
+  ctx.font = "500 34px Inter, Helvetica, Arial, sans-serif";
+  ctx.fillText("52!", 120, 150);
+
+  ctx.font = "400 20px Inter, Helvetica, Arial, sans-serif";
+  ctx.fillText("THE MUSEUM OF THE ONLY MOMENT", 120, 190);
+
+  ctx.textAlign = "right";
+  ctx.font = "400 18px Inter, Helvetica, Arial, sans-serif";
+  ctx.fillText("EXHIBITION 01", 1280, 150);
+  ctx.fillText("LOOK. / TEXT ARCHIVE", 1280, 182);
+
+  ctx.textAlign = "center";
+  ctx.font = "400 28px 'Noto Sans TC', 'PingFang TC', sans-serif";
+  ctx.fillStyle = "#55514A";
+  ctx.fillText("此刻我看見", 700, 430);
+
+  ctx.fillStyle = "#171717";
+  ctx.font = "500 58px 'Noto Sans TC', 'PingFang TC', sans-serif";
+  const lines = splitCanvasText(ctx, `「${moment.text}」`, 980);
+  const startY = 540;
+  lines.slice(0, 6).forEach((line, index) => {
+    ctx.fillText(line, 700, startY + index * 82);
   });
 
-  const image = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.href = image;
-  link.download = filename;
-  link.click();
-};
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#171717";
+  ctx.font = "500 22px Inter, Helvetica, Arial, sans-serif";
 
-const appendFormValue = (params, key, value) => {
-  if (!key) return;
-  params.set(key, value ?? "");
-};
+  const metaTop = 1150;
+  const leftX = 120;
+  const rightX = 670;
 
-const getEditionMeta = (selectedColor) => {
-  if (selectedColor === "cream") {
-    return {
-      label: "米白",
-      formValue: "米白",
-      title: "Renaissance Manuscript",
-      description: "米白款以 Renaissance Manuscript 為主視覺，像一頁被穿在身上的古書扉頁。",
-      setImage: TSHIRT_IMAGES.creamSet,
-      artworkImage: TSHIRT_IMAGES.creamSet,
-      factoryInk: "#4A3A2F",
-      factoryMuted: "#7A6756",
-      factoryLine: "rgba(74,58,47,0.55)"
-    };
+  ctx.fillText("DATE", leftX, metaTop);
+  ctx.fillText("TIME", rightX, metaTop);
+  ctx.fillText("SPACE-TIME SIGNATURE", leftX, metaTop + 140);
+  ctx.fillText("ARCHIVE ID", leftX, metaTop + 280);
+
+  ctx.fillStyle = "#55514A";
+  ctx.font = "400 34px 'IBM Plex Mono', 'Space Mono', monospace";
+  ctx.fillText(moment.dateLabel, leftX, metaTop + 46);
+  ctx.fillText(moment.timeLabel, rightX, metaTop + 46);
+  ctx.fillText(`#${moment.signature}`, leftX, metaTop + 186);
+  ctx.fillText(moment.id, leftX, metaTop + 326);
+
+  ctx.fillStyle = "#171717";
+  ctx.textAlign = "center";
+  ctx.font = "400 24px Inter, Helvetica, Arial, sans-serif";
+  ctx.fillText("This moment will never happen again.", 700, 1630);
+
+  ctx.fillStyle = "#77736C";
+  ctx.font = "400 18px Inter, Helvetica, Arial, sans-serif";
+  ctx.fillText(`One arrangement among ${FACTORIAL_SHORT} possible 52-card sequences.`, 700, 1672);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) reject(new Error("Failed to render PNG"));
+      else resolve(blob);
+    }, "image/png");
+  });
+}
+
+function Button({ children, onClick, variant = "primary", disabled = false, href, target }) {
+  const base =
+    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-40";
+
+  const variants = {
+    primary: "bg-neutral-950 text-[#F3F1EA] hover:bg-neutral-800",
+    secondary: "border border-neutral-950/20 text-neutral-950 hover:border-neutral-950/60 hover:bg-neutral-950/5",
+    ghost: "text-neutral-600 hover:text-neutral-950"
+  };
+
+  const className = `${base} ${variants[variant]}`;
+
+  if (href) {
+    return (
+      <a className={className} href={href} target={target} rel={target ? "noreferrer" : undefined}>
+        {children}
+      </a>
+    );
   }
 
-  return {
-    label: "黑色",
-    formValue: "黑色",
-    title: "Gothic Archive",
-    description: "黑色款以 Gothic Archive 為主視覺，正面極簡，背面保存完整觀看紀錄。",
-    setImage: TSHIRT_IMAGES.blackSet,
-    artworkImage: TSHIRT_IMAGES.blackBack,
-    factoryInk: "#FFFFFF",
-    factoryMuted: "#888888",
-    factoryLine: "rgba(255,255,255,0.75)"
-  };
-};
-
-const TextButton = ({ children, onClick }) => (
-  <button
-    onClick={onClick}
-    className="text-sm tracking-[0.18em] text-neutral-300 transition-colors hover:text-white"
-  >
-    {children}
-  </button>
-);
-
-const BackButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="mt-12 text-sm tracking-[0.2em] text-neutral-300 transition-colors hover:text-white"
-  >
-    ← 返回
-  </button>
-);
-
-const SectionLabel = ({ children }) => (
-  <p className="mb-4 text-xs uppercase tracking-[0.32em] text-neutral-400">
-    {children}
-  </p>
-);
-
-const HomeView = ({ onStart, onAbout, onLookArticle, onSolitude }) => (
-  <motion.div
-    key="home"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1.2 }}
-    className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center justify-center px-6 py-16 text-center"
-  >
-    <h1 className="mb-5 text-6xl font-bold tracking-[0.2em] text-white md:text-8xl">
-      52!
-    </h1>
-
-    <p className="mb-5 text-lg font-light tracking-[0.22em] text-neutral-200 md:text-2xl">
-      This Moment Will Never Happen Again
-    </p>
-
-    <p className="mb-12 text-base font-light tracking-widest text-neutral-300 md:text-xl">
-      此刻唯一。
-    </p>
-
-    <div className="mb-12 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-300 md:text-lg">
-      <p>每一次洗牌，</p>
-      <p>幾乎都是宇宙第一次出現那個排列。</p>
-      <p>而此刻也是。</p>
-    </div>
-
-    <div className="mb-10 max-w-xl border-y border-white/20 py-8 text-base font-light leading-loose tracking-wider text-neutral-300 md:text-lg">
-      <p>輸入此刻看見的一件事，</p>
-      <p>生成專屬於你的時空紀錄。</p>
-      <p className="mt-6 text-white">Write what you see. Archive this moment.</p>
-    </div>
-
-    <button
-      onClick={onStart}
-      className="mb-12 border border-white/30 px-12 py-5 text-sm uppercase tracking-[0.24em] text-white transition-all duration-500 hover:bg-white hover:text-black"
-    >
-      Look.
+  return (
+    <button className={className} onClick={onClick} disabled={disabled}>
+      {children}
     </button>
+  );
+}
 
-    <div className="mb-14 flex flex-wrap items-center justify-center gap-6">
-      <TextButton onClick={onAbout}>為什麼是 52!</TextButton>
-      <TextButton onClick={onLookArticle}>為什麼是 Look</TextButton>
-      <TextButton onClick={onSolitude}>關於孤獨</TextButton>
+function MuseumTag({ children }) {
+  return (
+    <span className="inline-flex border border-neutral-950/20 px-3 py-1 text-[0.65rem] tracking-[0.22em] text-neutral-600 uppercase">
+      {children}
+    </span>
+  );
+}
+
+function MetadataRow({ label, value }) {
+  return (
+    <div className="border-t border-neutral-950/15 py-4">
+      <div className="mb-1 text-[0.65rem] tracking-[0.22em] text-neutral-500 uppercase">{label}</div>
+      <div className="break-all font-mono text-sm text-neutral-950">{value}</div>
     </div>
+  );
+}
 
-    <div className="max-w-xl text-center">
-      <p className="mb-4 text-xs uppercase tracking-[0.35em] text-neutral-400">
-        Why 52!
-      </p>
-      <p className="break-words font-mono text-xs leading-relaxed tracking-wider text-neutral-400">
-        {FACTORIAL_52}
-      </p>
-      <p className="mt-5 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
-        這是一副撲克牌所有可能排列的數量。你看到的排列幾乎不會再次出現。正如這個瞬間。
-      </p>
-    </div>
-  </motion.div>
-);
-
-const ArticleView = ({ article, onBack, onStart }) => (
-  <motion.div
-    key="article"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1 }}
-    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
-  >
-    <p className="mb-8 text-xs uppercase tracking-[0.4em] text-neutral-400">
-      {article.eyebrow}
-    </p>
-
-    <h2 className="mb-12 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
-      {article.title}
-    </h2>
-
-    <div className="space-y-5 text-base font-light leading-loose tracking-wider text-neutral-300 md:text-lg">
-      {article.blocks.map((block, index) => {
-        if (block.type === "space") return <div key={`space-${index}`} className="h-4" />;
-
-        if (block.type === "factorial") {
-          return (
-            <div key={`factorial-${index}`} className="py-8">
-              <p className="break-words font-mono text-sm leading-relaxed tracking-wider text-neutral-400">
-                {FACTORIAL_52}
-              </p>
-            </div>
-          );
-        }
-
-        return (
-          <p key={`p-${index}`} className={block.highlight ? "pt-4 text-white" : undefined}>
-            {block.text}
-          </p>
-        );
-      })}
-    </div>
-
-    <button
-      onClick={onStart}
-      className="mt-14 border border-white/30 px-10 py-4 text-sm uppercase tracking-[0.22em] text-white transition-all duration-500 hover:bg-white hover:text-black"
-    >
-      {article.cta}
-    </button>
-
-    <BackButton onClick={onBack} />
-  </motion.div>
-);
-
-const LookView = ({ onArchive }) => {
-  const [input, setInput] = useState("");
-  const [showInput, setShowInput] = useState(false);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isArchiving, setIsArchiving] = useState(false);
-
+function Modal({ children, onClose }) {
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    function onKeyDown(event) {
+      if (event.key === "Escape") onClose();
+    }
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowInput(true), 1800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!showInput) return undefined;
-
-    const timer = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [showInput]);
-
-  const handleAction = () => {
-    if (!input.trim() || isArchiving) return;
-
-    setIsArchiving(true);
-
-    setTimeout(() => {
-      const now = new Date();
-
-      onArchive({
-        text: input.trim(),
-        date: formatDate(now),
-        time: formatTime(now),
-        signature: generateSignature(),
-        deck: shuffleDeck(),
-        quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
-      });
-    }, 900);
-  };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   return (
     <motion.div
-      key="look"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 p-4 backdrop-blur-md"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.2 }}
-      className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16"
+      role="dialog"
+      aria-modal="true"
     >
-      <div className={`text-center transition-all duration-1000 ${showInput ? "mb-10 opacity-60" : "mb-0 opacity-100"}`}>
-        <p className="mb-2 font-mono text-lg tracking-widest text-neutral-300">
-          {formatDate(currentTime)}
-        </p>
-        <p className="font-mono text-4xl tracking-widest text-white">
-          {formatTime(currentTime)}
-        </p>
+      <motion.div
+        className="relative max-h-[88vh] w-full max-w-2xl overflow-y-auto border border-neutral-950 bg-[#F3F1EA] p-6 shadow-2xl md:p-10"
+        initial={{ opacity: 0, y: 14, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 14, scale: 0.98 }}
+      >
+        <button
+          className="absolute right-4 top-4 text-neutral-500 transition hover:text-neutral-950"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <X size={22} />
+        </button>
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
 
-        {!showInput && (
-          <p className="mt-10 animate-pulse text-base font-light tracking-widest text-neutral-300">
-            這一刻，不會再重來。
-          </p>
-        )}
+function MomentCardPreview({ moment }) {
+  if (!moment) return null;
+
+  return (
+    <div className="mx-auto w-full max-w-[430px] border border-neutral-950 bg-[#F3F1EA] p-6 shadow-[10px_10px_0_rgba(20,20,20,0.12)]">
+      <div className="mb-14 flex items-start justify-between gap-6 border-b border-neutral-950 pb-5">
+        <div>
+          <div className="text-2xl font-medium tracking-[-0.04em]">52!</div>
+          <div className="mt-1 text-[0.62rem] uppercase tracking-[0.2em] text-neutral-600">
+            The Museum of the Only Moment
+          </div>
+        </div>
+
+        <div className="text-right text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-neutral-600">
+          Exhibition 01
+          <br />
+          Look. / Text Archive
+        </div>
       </div>
 
-      <AnimatePresence>
-        {showInput && (
-          <motion.div
-            key="input-box"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="flex w-full flex-col items-center"
+      <div className="min-h-[240px] py-8 text-center">
+        <div className="mb-8 text-sm tracking-[0.24em] text-neutral-500">此刻我看見</div>
+        <div className="text-3xl font-medium leading-[1.45] tracking-[-0.04em] text-neutral-950">
+          「{moment.text}」
+        </div>
+      </div>
+
+      <div className="mt-10 grid grid-cols-2 gap-5 border-t border-neutral-950 pt-5">
+        <div>
+          <div className="mb-1 text-[0.6rem] tracking-[0.2em] text-neutral-500">DATE</div>
+          <div className="font-mono text-sm">{moment.dateLabel}</div>
+        </div>
+        <div>
+          <div className="mb-1 text-[0.6rem] tracking-[0.2em] text-neutral-500">TIME</div>
+          <div className="font-mono text-sm">{moment.timeLabel}</div>
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-neutral-950/20 pt-5">
+        <div className="mb-1 text-[0.6rem] tracking-[0.2em] text-neutral-500">SPACE-TIME SIGNATURE</div>
+        <div className="font-mono text-sm">#{moment.signature}</div>
+      </div>
+
+      <div className="mt-10 border-t border-neutral-950 pt-5 text-center">
+        <div className="text-xs uppercase tracking-[0.18em] text-neutral-700">
+          This moment will never happen again.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShirtMockup({ moment }) {
+  const text = moment?.text || "窗外的光很安靜";
+  const signature = moment?.signature || "8F3A9C42D16E70B1";
+
+  return (
+    <div className="mx-auto w-full max-w-[440px]">
+      <div className="relative mx-auto h-[520px] w-full max-w-[360px]">
+        <div className="absolute left-1/2 top-4 h-[86px] w-[116px] -translate-x-1/2 rounded-b-[46px] border border-[#F3F1EA]/20 bg-neutral-950" />
+
+        <div
+          className="absolute left-1/2 top-8 h-[470px] w-[310px] -translate-x-1/2 bg-neutral-950 shadow-2xl"
+          style={{
+            clipPath:
+              "polygon(22% 0%, 78% 0%, 100% 16%, 88% 34%, 83% 28%, 83% 100%, 17% 100%, 17% 28%, 12% 34%, 0% 16%)"
+          }}
+        />
+
+        <div className="absolute left-1/2 top-[108px] w-[220px] -translate-x-1/2 text-center text-[#F3F1EA]">
+          <div className="text-[0.65rem] tracking-[0.22em]">52!</div>
+          <div className="mt-2 text-[0.48rem] tracking-[0.18em] text-[#C8C4B8]">
+            MUSEUM OBJECT
+          </div>
+          <div className="mt-10 text-[0.52rem] tracking-[0.2em] text-[#C8C4B8]">
+            LOOK. / TEXT ARCHIVE
+          </div>
+          <div className="mt-5 text-[1.1rem] leading-[1.55]">「{text}」</div>
+          <div className="mt-12 break-all font-mono text-[0.52rem] leading-relaxed text-[#C8C4B8]">
+            SPACE-TIME SIGNATURE
+            <br />#{signature}
+          </div>
+          <div className="mt-10 text-[0.5rem] tracking-[0.16em] text-[#8C887F]">
+            THIS MOMENT WILL NEVER HAPPEN AGAIN.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [view, setView] = useState("home");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => loadBoolean(STORAGE_KEYS.sound, true));
+
+  const [now, setNow] = useState(() => new Date());
+  const [inputVisible, setInputVisible] = useState(false);
+  const [lookText, setLookText] = useState("");
+  const [moment, setMoment] = useState(null);
+  const [archive, setArchive] = useState(() => loadJson(STORAGE_KEYS.archive, []));
+  const [toast, setToast] = useState("");
+  const [deckOpen, setDeckOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+
+  const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    saveString(STORAGE_KEYS.sound, soundEnabled);
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    saveJson(STORAGE_KEYS.archive, archive);
+  }, [archive]);
+
+  useEffect(() => {
+    if (view !== "look") return;
+
+    setInputVisible(false);
+    const timer = window.setTimeout(() => setInputVisible(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [view]);
+
+  const orderUrl = useMemo(() => buildOrderUrl(moment), [moment]);
+
+  function showToast(message) {
+    setToast(message);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast("");
+    }, 2200);
+  }
+
+  async function handleArchiveMoment() {
+    const cleanText = lookText.trim();
+
+    if (!cleanText) {
+      showToast("請先寫下你此刻看見的事。");
+      return;
+    }
+
+    if (soundEnabled) void playMuseumTone();
+
+    const generatedDeck = shuffleDeck();
+    const createdAt = new Date();
+    const signature = createSignature(cleanText, generatedDeck, createdAt.toISOString());
+
+    const newMoment = {
+      id: `LOOK-${compactDate(createdAt)}-${compactTime(createdAt)}-${signature.slice(0, 6)}`,
+      text: cleanText,
+      deck: generatedDeck,
+      signature,
+      dateLabel: formatDateLabel(createdAt),
+      timeLabel: formatTimeLabel(createdAt),
+      fullTimeLabel: formatFullTimeLabel(createdAt),
+      timeIso: createdAt.toISOString()
+    };
+
+    setMoment(newMoment);
+    setArchive((prev) => [newMoment, ...prev].slice(0, 24));
+    setView("result");
+    setDeckOpen(false);
+  }
+
+  async function handleDownload() {
+    if (!moment) {
+      showToast("目前沒有可下載的 Moment Card。");
+      return;
+    }
+
+    try {
+      const blob = await renderMomentCard(moment);
+      downloadBlob(blob, `${moment.id}.png`);
+      showToast("Moment Card 已下載。");
+    } catch {
+      showToast("圖卡產生失敗，請再試一次。");
+    }
+  }
+
+  async function handleShare() {
+    if (!moment) return;
+
+    const shareText = `52! / Look.\n此刻我看見：「${moment.text}」\n${moment.id}\nSpace-Time Signature #${moment.signature}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "52! / Look.",
+          text: shareText,
+          url: "https://moment52.vercel.app/"
+        });
+        return;
+      } catch {}
+    }
+
+    const copied = await copyText(shareText);
+    showToast(copied ? "分享文字已複製。" : "無法複製分享文字。");
+  }
+
+  function resetLook() {
+    setLookText("");
+    setInputVisible(false);
+    setDeckOpen(false);
+    setView("look");
+  }
+
+  function goTo(target) {
+    setView(target);
+    setMenuOpen(false);
+  }
+
+  const navItems = [
+    ["home", "Museum"],
+    ["look", "Look."],
+    ["archive", "Archive"],
+    ["shop", "Shop"],
+    ["about", "About"]
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F3F1EA] text-neutral-950 selection:bg-neutral-950 selection:text-[#F3F1EA]">
+      <div className="pointer-events-none fixed inset-0 opacity-[0.035] [background-image:linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] [background-size:54px_54px]" />
+
+      <header className="fixed left-0 right-0 top-0 z-40 border-b border-neutral-950/15 bg-[#F3F1EA]/88 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
+          <button
+            className="flex items-baseline gap-3 text-left"
+            onClick={() => goTo("home")}
+            aria-label="Go to museum entrance"
           >
-            <div className="mb-10 flex flex-col items-center text-center text-base font-light leading-relaxed tracking-wider text-neutral-300">
-              <p className="mb-3 text-2xl tracking-[0.2em] text-white">Look.</p>
-              <p>請寫下一件，</p>
-              <p>此刻真實存在的事。</p>
-            </div>
+            <span className="text-2xl font-medium tracking-[-0.06em]">52!</span>
+            <span className="hidden text-[0.62rem] uppercase tracking-[0.26em] text-neutral-500 sm:inline">
+              The Museum of the Only Moment
+            </span>
+          </button>
 
-            <input
-              type="text"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              maxLength={40}
-              disabled={isArchiving}
-              placeholder={PLACEHOLDERS[placeholderIndex]}
-              className="w-full border-b border-white/30 bg-transparent pb-4 text-center text-3xl font-light tracking-wide text-white placeholder-neutral-500 transition-colors focus:border-white focus:outline-none disabled:opacity-50 md:text-4xl"
-              autoFocus
-            />
-
-            <p className="mt-5 text-center text-sm font-light tracking-wider text-neutral-400">
-              例如：我有點累／窗外在下雨／我不知道
-            </p>
+          <nav className="hidden items-center gap-7 md:flex">
+            {navItems.map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => goTo(key)}
+                className={`text-[0.68rem] uppercase tracking-[0.2em] transition ${
+                  view === key ? "text-neutral-950" : "text-neutral-500 hover:text-neutral-950"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
 
             <button
-              onClick={handleAction}
-              disabled={!input.trim() || isArchiving}
-              className="mt-14 bg-white px-12 py-4 text-sm tracking-[0.28em] text-black transition-all duration-700 hover:bg-neutral-200 disabled:opacity-0"
+              onClick={() => setSoundEnabled((prev) => !prev)}
+              className="text-neutral-500 transition hover:text-neutral-950"
+              aria-label={soundEnabled ? "Sound on" : "Sound off"}
             >
-              {isArchiving ? "封存中..." : "我看見了"}
+              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
+          </nav>
+
+          <button className="md:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <Menu size={24} />
+          </button>
+        </div>
+      </header>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <Modal onClose={() => setMenuOpen(false)}>
+            <div className="space-y-6 pt-8">
+              {navItems.map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => goTo(key)}
+                  className="block w-full border-b border-neutral-950/15 pb-4 text-left text-2xl tracking-[-0.04em]"
+                >
+                  {label}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setSoundEnabled((prev) => !prev)}
+                className="inline-flex items-center gap-3 text-sm text-neutral-600"
+              >
+                {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                {soundEnabled ? "Sound on" : "Sound off"}
+              </button>
+            </div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      <main className="relative z-10 pt-16">
+        <AnimatePresence mode="wait">
+          {view === "home" && (
+            <motion.section
+              key="home"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="grid min-h-[72vh] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                  <MuseumTag>52! / Main Institution</MuseumTag>
+
+                  <h1 className="mt-8 max-w-4xl text-[4.8rem] font-medium leading-[0.85] tracking-[-0.1em] md:text-[8rem] lg:text-[10rem]">
+                    52!
+                  </h1>
+
+                  <div className="mt-8 max-w-3xl border-t border-neutral-950 pt-6">
+                    <p className="text-sm uppercase tracking-[0.24em] text-neutral-600">
+                      The Museum of the Only Moment
+                    </p>
+                    <p className="mt-3 text-3xl font-medium tracking-[-0.06em] md:text-5xl">
+                      此刻唯一的當下博物館
+                    </p>
+                  </div>
+
+                  <p className="mt-8 max-w-2xl text-lg font-light leading-[1.9] text-neutral-700">
+                    No prophecy. No guidance. No comfort.
+                    <br />
+                    Only the record of a moment that will never happen again.
+                  </p>
+
+                  <div className="mt-10 flex flex-wrap gap-3">
+                    <Button onClick={() => goTo("look")}>
+                      Enter Look. <ArrowRight size={16} />
+                    </Button>
+                    <Button variant="secondary" onClick={() => goTo("about")}>
+                      View Museum Map
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border border-neutral-950 bg-[#ECE8DC] p-5 md:p-8">
+                  <div className="mb-12 flex items-start justify-between border-b border-neutral-950 pb-5">
+                    <div>
+                      <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                        Now Showing
+                      </div>
+                      <div className="mt-2 text-4xl font-medium tracking-[-0.08em]">Look.</div>
+                    </div>
+                    <Eye size={28} />
+                  </div>
+
+                  <div className="space-y-8">
+                    <div>
+                      <div className="mb-2 text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                        Exhibition 01
+                      </div>
+                      <h2 className="text-2xl font-medium tracking-[-0.05em]">
+                        Text Archive of This Moment
+                      </h2>
+                      <p className="mt-4 leading-[1.9] text-neutral-700">
+                        寫下「此刻我看見」，生成一張 Moment Card，並將這一秒封存為可下載、可分享、可製作成實體物件的時空紀錄。
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 border-t border-neutral-950/15 pt-6 sm:grid-cols-2">
+                      <div className="border border-neutral-950/15 p-4">
+                        <Mic className="mb-5 text-neutral-400" size={22} />
+                        <div className="text-lg">Listen.</div>
+                        <div className="mt-2 text-sm leading-relaxed text-neutral-600">
+                          環境音的時空簽章
+                        </div>
+                        <div className="mt-5 inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.18em] text-neutral-400">
+                          <Lock size={12} /> Coming later
+                        </div>
+                      </div>
+
+                      <div className="border border-neutral-950/15 p-4">
+                        <Camera className="mb-5 text-neutral-400" size={22} />
+                        <div className="text-lg">Click.</div>
+                        <div className="mt-2 text-sm leading-relaxed text-neutral-600">
+                          影像瞬間的絕對孤獨隨機化
+                        </div>
+                        <div className="mt-5 inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.18em] text-neutral-400">
+                          <Lock size={12} /> Coming later
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {view === "look" && (
+            <motion.section
+              key="look"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-5xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="mb-10 flex flex-wrap items-center justify-between gap-5 border-b border-neutral-950 pb-5">
+                <div>
+                  <MuseumTag>Exhibition 01</MuseumTag>
+                  <h1 className="mt-5 text-5xl font-medium tracking-[-0.09em] md:text-7xl">
+                    Look.
+                  </h1>
+                </div>
+
+                <div className="text-right font-mono">
+                  <div className="text-xl">{formatDateLabel(now)}</div>
+                  <div className="mt-1 text-4xl tracking-[-0.08em]">{formatTimeLabel(now)}</div>
+                </div>
+              </div>
+
+              <div className="mx-auto max-w-3xl py-10 text-center">
+                <div className="text-[0.72rem] uppercase tracking-[0.26em] text-neutral-500">
+                  Text Archive of This Moment
+                </div>
+
+                <p className="mt-8 text-3xl font-light leading-[1.7] tracking-[-0.06em] md:text-5xl">
+                  Before you explain it,
+                  <br />
+                  record what is already here.
+                </p>
+
+                <p className="mx-auto mt-8 max-w-xl leading-[2] text-neutral-600">
+                  這不是創作。不是願望。不是名言。
+                  <br />
+                  只是誠實寫下：你此刻看見了什麼。
+                </p>
+
+                <AnimatePresence>
+                  {inputVisible && (
+                    <motion.div
+                      className="mt-14"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 16 }}
+                    >
+                      <label className="mb-4 block text-left text-[0.68rem] uppercase tracking-[0.24em] text-neutral-500">
+                        此刻我看見
+                      </label>
+
+                      <textarea
+                        value={lookText}
+                        onChange={(event) => setLookText(event.target.value)}
+                        placeholder="例如：窗外的雨、媽媽老了、我還活著、自己又在編故事、這一刻其實沒有問題"
+                        className="min-h-[180px] w-full resize-none border border-neutral-950 bg-transparent p-5 text-2xl leading-[1.6] tracking-[-0.04em] outline-none placeholder:text-neutral-400 focus:bg-[#ECE8DC] md:text-3xl"
+                        maxLength={80}
+                      />
+
+                      <div className="mt-4 flex items-center justify-between gap-4 text-sm text-neutral-500">
+                        <span>{lookText.trim().length}/80</span>
+                        <span>Private by default. Stored locally on this device.</span>
+                      </div>
+
+                      <div className="mt-8 flex flex-wrap justify-center gap-3">
+                        <Button onClick={handleArchiveMoment}>
+                          Archive This Moment <Archive size={16} />
+                        </Button>
+                        <Button variant="secondary" onClick={() => setLookText("")}>
+                          Clear
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.section>
+          )}
+
+          {view === "result" && moment && (
+            <motion.section
+              key="result"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="mb-12 border-b border-neutral-950 pb-6">
+                <MuseumTag>Archive Object Generated</MuseumTag>
+                <h1 className="mt-5 max-w-3xl text-4xl font-medium leading-[1.05] tracking-[-0.08em] md:text-6xl">
+                  A moment has entered the museum.
+                </h1>
+              </div>
+
+              <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+                <MomentCardPreview moment={moment} />
+
+                <div>
+                  <div className="mb-8 grid gap-4 md:grid-cols-2">
+                    <MetadataRow label="Object Type" value="LOOK. / TEXT ARCHIVE" />
+                    <MetadataRow label="Archive ID" value={moment.id} />
+                    <MetadataRow label="Date" value={moment.dateLabel} />
+                    <MetadataRow label="Time" value={moment.timeLabel} />
+                    <MetadataRow label="Space-Time Signature" value={`#${moment.signature}`} />
+                    <MetadataRow label="52-card sequence" value={`${FACTORIAL_SHORT} possible arrangements`} />
+                  </div>
+
+                  <div className="border border-neutral-950 bg-[#ECE8DC] p-5 md:p-7">
+                    <div className="mb-3 text-[0.68rem] uppercase tracking-[0.24em] text-neutral-500">
+                      Recorded Text
+                    </div>
+                    <div className="text-3xl font-medium leading-[1.5] tracking-[-0.05em]">
+                      「{moment.text}」
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Button onClick={handleDownload}>
+                      <Download size={16} /> Download PNG
+                    </Button>
+                    <Button variant="secondary" onClick={handleShare}>
+                      <Share2 size={16} /> Share
+                    </Button>
+                    <Button variant="secondary" onClick={() => goTo("shop")}>
+                      <Shirt size={16} /> Museum Shop
+                    </Button>
+                    <Button variant="ghost" onClick={resetLook}>
+                      <RotateCcw size={16} /> Re-enter Look.
+                    </Button>
+                  </div>
+
+                  <div className="mt-10">
+                    <button
+                      onClick={() => setDeckOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between border-t border-neutral-950 py-4 text-left"
+                    >
+                      <span className="text-[0.72rem] uppercase tracking-[0.24em] text-neutral-600">
+                        View 52-card arrangement
+                      </span>
+                      <span>{deckOpen ? "−" : "+"}</span>
+                    </button>
+
+                    <AnimatePresence>
+                      {deckOpen && (
+                        <motion.div
+                          className="space-y-3 border-b border-neutral-950 pb-5 font-mono text-xs leading-relaxed text-neutral-700"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                        >
+                          {deckLines(moment.deck).map((line, index) => (
+                            <div key={index}>{line}</div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {view === "archive" && (
+            <motion.section
+              key="archive"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="mb-12 border-b border-neutral-950 pb-6">
+                <MuseumTag>Private Archive</MuseumTag>
+                <h1 className="mt-5 text-5xl font-medium tracking-[-0.09em] md:text-7xl">
+                  Look Archive
+                </h1>
+                <p className="mt-6 max-w-2xl leading-[1.9] text-neutral-600">
+                  這裡只顯示儲存在此瀏覽器裡的紀錄。第一版預設不公開，不建立社群牆，不把使用者的句子送到後台。
+                </p>
+              </div>
+
+              {archive.length === 0 ? (
+                <div className="border border-neutral-950/20 p-8 text-neutral-600">
+                  尚未封存任何文字。進入 Look.，寫下你此刻看見的事。
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {archive.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setMoment(item);
+                        setView("result");
+                      }}
+                      className="border border-neutral-950/20 bg-[#ECE8DC] p-5 text-left transition hover:border-neutral-950 hover:bg-[#E4DFD1]"
+                    >
+                      <div className="mb-12 flex items-start justify-between gap-4">
+                        <div className="text-[0.62rem] uppercase tracking-[0.22em] text-neutral-500">
+                          LOOK. / TEXT ARCHIVE
+                        </div>
+                        <Archive size={16} className="text-neutral-500" />
+                      </div>
+
+                      <div className="text-2xl font-medium leading-[1.45] tracking-[-0.05em]">
+                        「{item.text}」
+                      </div>
+
+                      <div className="mt-8 border-t border-neutral-950/15 pt-4 font-mono text-xs text-neutral-500">
+                        {item.id}
+                        <br />#{item.signature}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.section>
+          )}
+
+          {view === "shop" && (
+            <motion.section
+              key="shop"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+                <div>
+                  <MuseumTag>Museum Shop</MuseumTag>
+                  <h1 className="mt-5 text-5xl font-medium leading-[0.95] tracking-[-0.09em] md:text-7xl">
+                    Wearable
+                    <br />
+                    Record.
+                  </h1>
+
+                  <p className="mt-8 max-w-xl text-xl leading-[1.9] text-neutral-700">
+                    把一個瞬間穿在身上。
+                  </p>
+
+                  <p className="mt-6 max-w-xl leading-[2] text-neutral-600">
+                    這不是潮流標語，不是品牌口號。它是你在某一刻真正看見的事，被轉化成一件可穿戴的館藏物件。
+                  </p>
+
+                  <div className="mt-10 space-y-4 border-y border-neutral-950 py-6">
+                    <MetadataRow label="Object Type" value="MUSEUM SHOP / WEARABLE RECORD" />
+                    <MetadataRow label="Source Exhibition" value="LOOK. / TEXT ARCHIVE" />
+                    <MetadataRow
+                      label="Production Status"
+                      value={moment ? "Ready for pre-order form" : "Generate a Look. archive first"}
+                    />
+                  </div>
+
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    {moment ? (
+                      <Button href={orderUrl} target="_blank">
+                        <ShoppingBag size={16} /> Open Pre-order Form
+                      </Button>
+                    ) : (
+                      <Button onClick={() => goTo("look")}>
+                        Enter Look. First <ArrowRight size={16} />
+                      </Button>
+                    )}
+
+                    <Button variant="secondary" onClick={() => setAboutOpen(true)}>
+                      Product Note
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border border-neutral-950 bg-[#ECE8DC] p-5 md:p-8">
+                  <div className="mb-8 flex items-center justify-between border-b border-neutral-950 pb-5">
+                    <div>
+                      <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                        Preview
+                      </div>
+                      <div className="mt-2 text-2xl font-medium tracking-[-0.05em]">
+                        Look. Archive T-shirt
+                      </div>
+                    </div>
+                    <Shirt size={28} />
+                  </div>
+
+                  <ShirtMockup moment={moment} />
+
+                  <div className="mt-8 border-t border-neutral-950 pt-5 text-sm leading-[1.9] text-neutral-600">
+                    第一版可先採「填表預購 / 人工確認 / 轉帳後製作」流程。商品頁不要做成一般電商，而要維持 Museum Shop 的館藏延伸物氣質。
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {view === "about" && (
+            <motion.section
+              key="about"
+              className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-5 py-14 md:px-8 md:py-20"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+            >
+              <div className="mb-14 border-b border-neutral-950 pb-6">
+                <MuseumTag>Museum Map</MuseumTag>
+                <h1 className="mt-5 max-w-4xl text-5xl font-medium leading-[1] tracking-[-0.09em] md:text-7xl">
+                  52! is not a shuffle tool.
+                  <br />
+                  It is a museum.
+                </h1>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="border border-neutral-950 bg-[#ECE8DC] p-6 md:p-8">
+                  <div className="mb-20 text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                    Main Institution
+                  </div>
+                  <h2 className="text-5xl font-medium tracking-[-0.09em]">52!</h2>
+                  <p className="mt-6 leading-[2] text-neutral-700">
+                    52! 是一座冷靜的當下博物館。它不占卜、不勵志、不灌雞湯、不解釋人生。
+                    它只保存那些再也不會重來的瞬間。
+                  </p>
+                  <p className="mt-6 leading-[2] text-neutral-700">
+                    一副 52 張牌完整排列共有約 {FACTORIAL_SHORT} 種可能。每一次排列，都幾乎是宇宙第一次出現。
+                    這是 52! 的數學底層，也是「此刻唯一」的理性支撐。
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="border border-neutral-950 p-6">
+                    <Eye className="mb-8" size={28} />
+                    <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                      Permanent Exhibition 01
+                    </div>
+                    <h3 className="mt-3 text-4xl font-medium tracking-[-0.08em]">Look.</h3>
+                    <p className="mt-5 leading-[1.9] text-neutral-700">
+                      看見。此刻文字的時空封存。
+                      使用者寫下「此刻我看見」，生成一張 Moment Card。
+                    </p>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="border border-neutral-950/20 p-6 opacity-70">
+                      <Mic className="mb-8" size={24} />
+                      <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                        Future Wing
+                      </div>
+                      <h3 className="mt-3 text-3xl font-medium tracking-[-0.08em]">Listen.</h3>
+                      <p className="mt-5 text-sm leading-[1.9] text-neutral-700">
+                        聆聽。封存這一刻環境音的時空簽章。
+                      </p>
+                    </div>
+
+                    <div className="border border-neutral-950/20 p-6 opacity-70">
+                      <Camera className="mb-8" size={24} />
+                      <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+                        Future Wing
+                      </div>
+                      <h3 className="mt-3 text-3xl font-medium tracking-[-0.08em]">Click.</h3>
+                      <p className="mt-5 text-sm leading-[1.9] text-neutral-700">
+                        捕捉。某一瞬間影像的絕對孤獨隨機化。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-neutral-950 bg-[#F3F1EA] px-5 py-3 text-sm shadow-xl"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+          >
+            {toast}
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
-  );
-};
 
-const ArchiveView = ({ data, onTShirt, onReset }) => {
-  const cardRef = useRef(null);
-  const deckText = data.deck?.join(" ") || "";
-
-  const handleDownload = async () => {
-    try {
-      await exportElementAsPng(cardRef.current, `52Moment-${data.signature}.png`);
-    } catch (error) {
-      console.error("圖卡匯出失敗", error);
-    }
-  };
-
-  return (
-    <motion.div
-      key="archive"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 1 }}
-      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center gap-16 px-6 py-12 md:flex-row md:gap-24"
-    >
-      <div
-        ref={cardRef}
-        className="relative flex w-full max-w-sm flex-shrink-0 flex-col items-center overflow-hidden border border-white/20 bg-[#0E0E0E] p-10 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-      >
-        <h2 className="mb-12 text-3xl font-bold tracking-[0.3em] text-white">
-          52!
-        </h2>
-
-        <p className="mb-6 text-sm tracking-[0.25em] text-neutral-400">
-          此刻我看見
-        </p>
-
-        <p className="mb-10 break-words px-2 text-3xl font-light leading-relaxed tracking-wider text-white">
-          「{data.text}」
-        </p>
-
-        <p className="mb-12 px-4 text-base font-light leading-relaxed tracking-wider text-neutral-300">
-          {data.quote}
-        </p>
-
-        {deckText && (
-          <div className="mb-12 w-full border-y border-white/15 py-5">
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-neutral-400">
-              Deck Sequence
-            </p>
-            <p className="break-words font-mono text-xs leading-relaxed tracking-wider text-neutral-400">
-              {deckText}
-            </p>
-          </div>
-        )}
-
-        <div className="flex w-full flex-col items-center gap-2 break-all px-4 font-mono text-xs tracking-widest text-neutral-400">
-          <p>
-            {data.date} {data.time}
-          </p>
-          <p className="mt-4">{data.signature}</p>
-        </div>
-
-        <p className="mt-14 text-xs uppercase tracking-[0.22em] text-neutral-400">
-          This moment will never happen again.
-        </p>
-      </div>
-
-      <div className="flex w-full max-w-sm flex-col items-start text-left">
-        <h2 className="mb-10 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
-          這一刻，被保存了。
-        </h2>
-
-        <div className="mb-12 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-300">
-          <p>這不是占卜結果。</p>
-          <p>它只是宇宙在這一刻留下的一個座標。</p>
-          <p>而你留下了自己的觀察。</p>
-        </div>
-
-        <div className="mb-14 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-400">
-          <p>你可以讓它停留在這裡。</p>
-          <p>或者，把它穿在身上。</p>
-        </div>
-
-        <div className="flex w-full flex-col gap-5">
-          <button
-            onClick={onTShirt}
-            className="flex w-full items-center justify-center gap-3 bg-white px-8 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200"
-          >
-            製作專屬 T 恤 <ArrowRight size={16} />
-          </button>
-
-          <button
-            onClick={handleDownload}
-            className="flex w-full items-center justify-center gap-3 border border-white/30 px-8 py-4 text-sm tracking-[0.2em] text-white transition-colors hover:bg-white/10"
-          >
-            <Download size={16} /> 下載紀錄卡
-          </button>
-
-          <button
-            onClick={onReset}
-            className="mt-4 w-full text-center text-sm tracking-[0.2em] text-neutral-300 transition-colors hover:text-white"
-          >
-            重新觀看
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const EditionButton = ({ active, children, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`border px-5 py-3 text-sm tracking-[0.18em] transition-colors ${
-      active
-        ? "border-white bg-white text-black"
-        : "border-white/25 text-neutral-300 hover:border-white/60 hover:text-white"
-    }`}
-  >
-    {children}
-  </button>
-);
-
-const ProductMockup = ({ selectedColor, onSelectColor }) => {
-  const edition = getEditionMeta(selectedColor);
-
-  return (
-    <div className="flex flex-col">
-      <SectionLabel>The Garment</SectionLabel>
-
-      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/20 bg-[#111]">
-        <img
-          src={edition.setImage}
-          alt={`52! ${edition.label} T-shirt mockup`}
-          className="h-full w-full object-cover"
-        />
-      </div>
-
-      <div className="mt-5 flex gap-3">
-        <EditionButton active={selectedColor === "black"} onClick={() => onSelectColor("black")}>
-          黑色
-        </EditionButton>
-        <EditionButton active={selectedColor === "cream"} onClick={() => onSelectColor("cream")}>
-          米白
-        </EditionButton>
-      </div>
-
-      <p className="mt-5 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
-        {edition.description}
-      </p>
-    </div>
-  );
-};
-
-const ArtworkPreview = ({ data, selectedColor }) => {
-  const edition = getEditionMeta(selectedColor);
-
-  return (
-    <div className="flex flex-col">
-      <SectionLabel>Your Moment</SectionLabel>
-
-      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/20 bg-[#0E0E0E]">
-        <img
-          src={edition.artworkImage}
-          alt={`52! ${edition.label} artwork preview`}
-          className="h-full w-full object-cover"
-        />
-      </div>
-
-      <div className="mt-5 space-y-3 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
-        <p>
-          圖案中的 <span className="text-white">YOUR MOMENT</span> 區域，
-          會替換成你在 Look 頁面寫下的那句話。
-        </p>
-
-        <p className="text-neutral-300">
-          此刻我看見：「{data.text}」
-        </p>
-
-        <p>
-          當下金句：<span className="text-neutral-300">{data.quote}</span>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const HiddenFactoryArtwork = React.forwardRef(({ data, deckRows, selectedColor }, ref) => {
-  const edition = getEditionMeta(selectedColor);
-
-  return (
-    <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-      <div
-        ref={ref}
-        className="flex flex-col items-center justify-between font-sans"
-        style={{
-          width: "1200px",
-          height: "1600px",
-          backgroundColor: "transparent",
-          padding: "110px",
-          color: edition.factoryInk
-        }}
-      >
-        <div style={{ width: "100%", textAlign: "center" }}>
-          <p
-            style={{
-              fontSize: "86px",
-              fontWeight: 700,
-              letterSpacing: "0.35em",
-              color: edition.factoryInk,
-              marginBottom: "110px"
-            }}
-          >
-            52!
-          </p>
-
-          <div
-            style={{
-              width: "100%",
-              border: `2px solid ${edition.factoryLine}`,
-              padding: "110px 70px",
-              marginBottom: "90px"
-            }}
-          >
-            <p
-              style={{
-                fontSize: "72px",
-                fontWeight: 300,
-                letterSpacing: "0.35em",
-                textTransform: "uppercase",
-                color: edition.factoryInk,
-                marginBottom: "50px"
-              }}
-            >
-              LOOK.
-            </p>
-
-            <p
-              style={{
-                fontSize: "24px",
-                letterSpacing: "0.25em",
-                color: edition.factoryMuted,
-                marginBottom: "38px"
-              }}
-            >
-              YOUR MOMENT
-            </p>
-
-            <p
-              style={{
-                fontSize: "86px",
-                fontWeight: 300,
-                letterSpacing: "0.08em",
-                color: edition.factoryInk,
-                textAlign: "center",
-                lineHeight: "1.35",
-                margin: 0
-              }}
-            >
-              「{data.text}」
-            </p>
-          </div>
-
-          <p
-            style={{
-              fontSize: "24px",
-              letterSpacing: "0.35em",
-              color: edition.factoryMuted,
-              marginBottom: "20px"
-            }}
-          >
-            SPACE-TIME SIGNATURE
-          </p>
-
-          <p
-            style={{
-              fontSize: "34px",
-              fontFamily: "monospace",
-              letterSpacing: "0.18em",
-              color: edition.factoryInk,
-              marginBottom: "90px"
-            }}
-          >
-            {data.signature}
-          </p>
-
-          {deckRows.length > 0 && (
-            <div
-              style={{
-                width: "100%",
-                marginBottom: "90px",
-                fontFamily: "monospace",
-                fontSize: "24px",
-                letterSpacing: "0.12em",
-                lineHeight: "1.8",
-                color: edition.factoryInk,
-                textAlign: "center"
-              }}
-            >
-              {deckRows.map((row, index) => (
-                <p key={`factory-row-${index}`} style={{ margin: 0 }}>
-                  {row.join(" ")}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ width: "100%", textAlign: "center" }}>
-          <div
-            style={{
-              width: "260px",
-              height: "1px",
-              backgroundColor: edition.factoryLine,
-              margin: "0 auto 70px"
-            }}
-          />
-
-          <p
-            style={{
-              fontSize: "26px",
-              letterSpacing: "0.25em",
-              color: edition.factoryMuted,
-              margin: 0
-            }}
-          >
-            THIS MOMENT WILL NEVER HAPPEN AGAIN
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-HiddenFactoryArtwork.displayName = "HiddenFactoryArtwork";
-
-const TShirtView = ({ data, onBack }) => {
-  const [selectedColor, setSelectedColor] = useState("black");
-  const factoryRef = useRef(null);
-  const deckRows = chunkArray(data.deck || [], 13);
-  const edition = getEditionMeta(selectedColor);
-
-  const handlePreorder = () => {
-    const params = new URLSearchParams();
-    const deckText = data.deck?.join(" ") || "";
-
-    appendFormValue(params, "usp", "pp_url");
-    appendFormValue(params, FORM_ENTRY_DECK, deckText);
-    appendFormValue(params, FORM_ENTRY_SIGNATURE, data.signature);
-    appendFormValue(params, FORM_ENTRY_TIME, `${data.date} ${data.time}`);
-    appendFormValue(params, FORM_ENTRY_MOMENT_TEXT, data.text);
-    appendFormValue(params, FORM_ENTRY_QUOTE, data.quote || "");
-    appendFormValue(params, FORM_ENTRY_SIZE, "M");
-    appendFormValue(params, FORM_ENTRY_COLOR, edition.formValue);
-    appendFormValue(params, FORM_ENTRY_CUSTOM_NOTICE, CUSTOM_PRODUCT_NOTICE);
-    appendFormValue(params, FORM_ENTRY_PRIVACY_NOTICE, PRIVACY_NOTICE);
-
-    window.open(
-      `${GOOGLE_FORM_BASE_URL}?${params.toString()}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
-
-  const handleFactoryExport = async () => {
-    try {
-      await exportElementAsPng(factoryRef.current, `FACTORY-PRINT-${data.signature}.png`, {
-        scale: 4,
-        backgroundColor: null
-      });
-
-      alert("已匯出客製化圖案預覽檔。");
-    } catch (error) {
-      console.error("圖檔匯出失敗", error);
-    }
-  };
-
-  return (
-    <>
-      <motion.div
-        key="tshirt"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 1 }}
-        className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-6 py-12"
-      >
-        <div className="mb-14 text-center">
-          <p className="mb-4 text-xs uppercase tracking-[0.4em] text-neutral-400">
-            T-Shirt
-          </p>
-
-          <h2 className="mb-6 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
-            把一個瞬間穿在身上。
-          </h2>
-
-          <p className="mx-auto max-w-2xl text-base font-light leading-relaxed tracking-wider text-neutral-300">
-            選擇黑色 Gothic Archive 或米白 Renaissance Manuscript。
-            圖案中的 YOUR MOMENT 區域，會替換成你剛剛寫下的那句話。
-          </p>
-        </div>
-
-        <div className="grid w-full gap-10 lg:grid-cols-[1fr_1fr_0.9fr]">
-          <ProductMockup selectedColor={selectedColor} onSelectColor={setSelectedColor} />
-
-          <ArtworkPreview data={data} selectedColor={selectedColor} />
-
-          <div className="flex flex-col justify-center text-left">
-            <SectionLabel>52! Custom T-Shirt</SectionLabel>
-
-            <div className="mb-8">
-              <p className="text-4xl font-light tracking-wider text-white">{PRICE}</p>
-              <p className="mt-2 text-sm tracking-wider text-neutral-400">首批預購價</p>
-            </div>
-
-            <div className="mb-10 space-y-3 text-base leading-relaxed tracking-wider text-neutral-300">
-              <p>✓ 個人化客製設計</p>
-              <p>✓ 專屬 Space-Time Signature</p>
-              <p>✓ 專屬牌序與此刻文字</p>
-              <p>✓ 全額預付製作</p>
-              <p>✓ 約 {SHIPPING_TIME} 出貨</p>
-            </div>
-
-            <div className="mb-10 border-y border-white/20 py-6 text-sm font-light leading-relaxed tracking-wider text-neutral-300">
-              <p className="text-white">目前選擇</p>
-              <p className="mt-2">{edition.label}｜{edition.title}</p>
-
-              <p className="mt-5 text-white">Your Moment</p>
-              <p className="mt-2">「{data.text}」</p>
-
-              <p className="mt-5 text-white">當下金句</p>
-              <p className="mt-2">{data.quote}</p>
-
-              <p className="mt-5 text-white">Space-Time Signature</p>
-              <p className="mt-2 break-all font-mono">{data.signature}</p>
-            </div>
-
-            <div className="mb-8 border border-white/20 p-5 text-sm font-light leading-relaxed tracking-wider text-neutral-300">
-              <p className="mb-4 text-base text-white">付款與製作說明</p>
-              <p className="mb-3">
-                本商品印有您專屬生成的 Space-Time Signature、牌序與此刻文字，屬個人化客製商品。
+      <AnimatePresence>
+        {aboutOpen && (
+          <Modal onClose={() => setAboutOpen(false)}>
+            <div className="pr-8">
+              <MuseumTag>Museum Shop Note</MuseumTag>
+              <h2 className="mt-5 text-4xl font-medium tracking-[-0.08em]">
+                This is not a normal custom T-shirt.
+              </h2>
+              <p className="mt-6 leading-[2] text-neutral-700">
+                本商品印有使用者專屬的 Space-Time Signature 與 Look. 文字紀錄。
+                它不是一般圖案商品，而是依照某一秒生成的個人化館藏物件。
               </p>
-              <p className="mb-3">
-                為避免資源浪費與衝動訂製，52! 客製 T-shirt 採全額預付製作。目前僅接受銀行／ATM 轉帳，完成付款並經確認後，訂單才會正式成立並進入製作流程。
-              </p>
-              <p className="mb-3">
-                當您完成匯款的那一刻，也代表您對這個當下做出了確認。
-              </p>
-              <p>
-                接單確認後，約需 {SHIPPING_TIME} 製作並寄出。因本商品係依消費者要求所為之個人化客製商品，除商品瑕疵、印刷錯誤或寄送錯誤外，不接受任意取消、退換貨，並排除七日解除權之適用。
+              <p className="mt-5 leading-[2] text-neutral-700">
+                第一版建議維持人工確認與接單後製作，不急著導入購物車或金流。
+                這樣能保留品牌的冷靜感，也能降低衝動購物、退貨與生產浪費。
               </p>
             </div>
-
-            <button
-              onClick={handlePreorder}
-              className="mb-5 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.22em] text-black transition-colors hover:bg-neutral-200"
-            >
-              前往預購 <ArrowRight size={16} />
-            </button>
-
-            <button
-              onClick={handleFactoryExport}
-              className="mb-6 flex w-full items-center justify-center gap-3 border border-white/25 px-12 py-4 text-xs tracking-[0.2em] text-neutral-300 transition-colors hover:bg-white/5 hover:text-white"
-            >
-              匯出客製圖案預覽
-            </button>
-
-            <button
-              onClick={onBack}
-              className="text-sm tracking-[0.1em] text-neutral-300 transition-colors hover:text-white"
-            >
-              ← 返回觀看紀錄
-            </button>
-
-            <p className="mt-8 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
-              * 點擊預購將前往訂製表單，專屬牌序、時空簽章、此刻文字與當下金句會自動帶入。
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      <HiddenFactoryArtwork
-        ref={factoryRef}
-        data={data}
-        deckRows={deckRows}
-        selectedColor={selectedColor}
-      />
-    </>
-  );
-};
-
-export default function App() {
-  const [step, setStep] = useState("home");
-  const [articleId, setArticleId] = useState(null);
-  const [momentData, setMomentData] = useState(null);
-
-  const openArticle = (id) => {
-    setArticleId(id);
-    setStep("article");
-  };
-
-  const startLooking = () => {
-    setStep("look");
-  };
-
-  const backHome = () => {
-    setArticleId(null);
-    setStep("home");
-  };
-
-  return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
-      <AnimatePresence mode="wait">
-        {step === "home" && (
-          <HomeView
-            onStart={startLooking}
-            onAbout={() => openArticle("about")}
-            onLookArticle={() => openArticle("look")}
-            onSolitude={() => openArticle("solitude")}
-          />
-        )}
-
-        {step === "article" && articleId && ARTICLES[articleId] && (
-          <ArticleView
-            article={ARTICLES[articleId]}
-            onBack={backHome}
-            onStart={startLooking}
-          />
-        )}
-
-        {step === "look" && (
-          <LookView
-            onArchive={(data) => {
-              setMomentData(data);
-              setStep("archive");
-            }}
-          />
-        )}
-
-        {step === "archive" && momentData && (
-          <ArchiveView
-            data={momentData}
-            onTShirt={() => setStep("tshirt")}
-            onReset={() => {
-              setMomentData(null);
-              setStep("look");
-            }}
-          />
-        )}
-
-        {step === "tshirt" && momentData && (
-          <TShirtView data={momentData} onBack={() => setStep("archive")} />
+          </Modal>
         )}
       </AnimatePresence>
+
+      <footer className="relative z-10 border-t border-neutral-950/15 px-5 py-8 md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-[0.65rem] uppercase tracking-[0.18em] text-neutral-500 md:flex-row md:items-center md:justify-between">
+          <div>52! / The Museum of the Only Moment</div>
+          <div>Look. / Text Archive of This Moment</div>
+        </div>
+      </footer>
     </div>
   );
 }
