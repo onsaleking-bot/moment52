@@ -20,8 +20,12 @@ const FORM_ENTRY_COLOR = "entry.1607852062";
 const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
 const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
 
-// 如果你的 public 資料夾檔名是 tshirt-front.png，請改成 "/tshirt-front.png"
-const TSHIRT_MOCKUP_SRC = "/tshirt-front.png.png";
+// 目前 GitHub 實際檔名是 .png.png
+const TSHIRT_IMAGES = {
+  blackSet: "/images/tshirt-black-gothic-set.png.png",
+  blackBack: "/images/tshirt-black-gothic-back.png.png",
+  creamSet: "/images/tshirt-cream-renaissance-set.png.png"
+};
 
 const FACTORIAL_52 =
   "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
@@ -201,6 +205,34 @@ const exportElementAsPng = async (element, filename, options = {}) => {
 const appendFormValue = (params, key, value) => {
   if (!key) return;
   params.set(key, value ?? "");
+};
+
+const getEditionMeta = (selectedColor) => {
+  if (selectedColor === "cream") {
+    return {
+      label: "米白",
+      formValue: "米白",
+      title: "Renaissance Manuscript",
+      description: "米白款以 Renaissance Manuscript 為主視覺，像一頁被穿在身上的古書扉頁。",
+      setImage: TSHIRT_IMAGES.creamSet,
+      artworkImage: TSHIRT_IMAGES.creamSet,
+      factoryInk: "#4A3A2F",
+      factoryMuted: "#7A6756",
+      factoryLine: "rgba(74,58,47,0.55)"
+    };
+  }
+
+  return {
+    label: "黑色",
+    formValue: "黑色",
+    title: "Gothic Archive",
+    description: "黑色款以 Gothic Archive 為主視覺，正面極簡，背面保存完整觀看紀錄。",
+    setImage: TSHIRT_IMAGES.blackSet,
+    artworkImage: TSHIRT_IMAGES.blackBack,
+    factoryInk: "#FFFFFF",
+    factoryMuted: "#888888",
+    factoryLine: "rgba(255,255,255,0.75)"
+  };
 };
 
 const TextButton = ({ children, onClick }) => (
@@ -579,246 +611,237 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
   );
 };
 
-const ProductMockup = ({ data }) => (
-  <div className="flex flex-col">
-    <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-      Product Mockup
-    </p>
+const EditionButton = ({ active, children, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`border px-5 py-3 text-xs tracking-[0.2em] transition-colors ${
+      active
+        ? "border-white bg-white text-black"
+        : "border-white/15 text-neutral-500 hover:border-white/40 hover:text-white"
+    }`}
+  >
+    {children}
+  </button>
+);
 
-    <div className="relative flex aspect-[3/4] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
-      <img
-        src={TSHIRT_MOCKUP_SRC}
-        alt="T-shirt Mockup"
-        className="absolute inset-0 h-full w-full object-cover opacity-35 grayscale mix-blend-screen"
-      />
+const ProductMockup = ({ selectedColor, onSelectColor }) => {
+  const edition = getEditionMeta(selectedColor);
 
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <p className="mb-5 text-4xl font-bold tracking-[0.35em] text-white/85">
-          52!
-        </p>
-        <p className="text-xs uppercase tracking-[0.45em] text-neutral-400">
-          Look.
-        </p>
+  return (
+    <div className="flex flex-col">
+      <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
+        The Garment
+      </p>
+
+      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
+        <img
+          src={edition.setImage}
+          alt={`52! ${edition.label} T-shirt mockup`}
+          className="h-full w-full object-cover"
+        />
       </div>
 
-      <div className="absolute bottom-5 left-5 right-5 border-t border-white/10 pt-4">
-        <p className="text-center text-[9px] uppercase tracking-[0.25em] text-neutral-600">
-          Front concept preview
+      <div className="mt-5 flex gap-3">
+        <EditionButton active={selectedColor === "black"} onClick={() => onSelectColor("black")}>
+          黑色
+        </EditionButton>
+        <EditionButton active={selectedColor === "cream"} onClick={() => onSelectColor("cream")}>
+          米白
+        </EditionButton>
+      </div>
+
+      <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+        {edition.description}
+      </p>
+    </div>
+  );
+};
+
+const ArtworkPreview = ({ data, selectedColor }) => {
+  const edition = getEditionMeta(selectedColor);
+
+  return (
+    <div className="flex flex-col">
+      <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
+        Your Moment
+      </p>
+
+      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#0E0E0E]">
+        <img
+          src={edition.artworkImage}
+          alt={`52! ${edition.label} artwork preview`}
+          className="h-full w-full object-cover"
+        />
+      </div>
+
+      <div className="mt-5 space-y-3 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+        <p>
+          圖案中的 <span className="text-neutral-400">YOUR MOMENT</span> 區域，
+          會替換成你在 Look 頁面寫下的那句話。
+        </p>
+
+        <p className="text-neutral-400">
+          此刻我看見：「{data.text}」
         </p>
       </div>
     </div>
+  );
+};
 
-    <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
-      商品示意圖只呈現衣服本體與正面極簡識別；完整客製內容不在這裡堆疊。
-    </p>
-  </div>
-);
+const HiddenFactoryArtwork = React.forwardRef(({ data, deckRows, selectedColor }, ref) => {
+  const edition = getEditionMeta(selectedColor);
 
-const ArtworkPreview = ({ data, deckRows, onFactoryExport }) => (
-  <div className="flex flex-col">
-    <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-      Artwork Preview
-    </p>
-
-    <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden border border-white/10 bg-[#0E0E0E] p-8 text-center shadow-[0_0_50px_rgba(0,0,0,0.45)]">
-      <div>
-        <p className="mb-8 text-3xl font-bold tracking-[0.35em] text-white/90">
-          52!
-        </p>
-
-        <div className="mb-8 border border-white/20 px-6 py-10">
-          <p className="mb-8 text-3xl font-light uppercase tracking-[0.35em] text-white/90">
-            Look.
-          </p>
-
-          <p className="break-all text-3xl font-light leading-snug tracking-widest text-white/95 md:text-4xl">
-            「{data.text}」
-          </p>
-        </div>
-
-        <p className="mb-3 text-[8px] uppercase tracking-[0.35em] text-neutral-600">
-          Space-Time Signature
-        </p>
-
-        <p className="mb-8 font-mono text-[11px] tracking-widest text-neutral-300 md:text-xs">
-          {data.signature}
-        </p>
-
-        {deckRows.length > 0 && (
-          <div className="mb-8 space-y-1 font-mono text-[6px] leading-relaxed tracking-wider text-neutral-500 md:text-[7px]">
-            {deckRows.map((row, index) => (
-              <p key={`artwork-row-${index}`}>{row.join(" ")}</p>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <div className="mx-auto mb-6 h-px w-32 bg-white/10" />
-
-        <p className="text-[8px] uppercase tracking-[0.35em] text-neutral-500">
-          This moment will never happen again.
-        </p>
-      </div>
-
-      <button
-        onClick={onFactoryExport}
-        className="absolute right-4 top-4 border border-white/10 px-2 py-1 text-[8px] uppercase tracking-[0.25em] text-neutral-600 transition-colors hover:bg-white/5 hover:text-neutral-300"
+  return (
+    <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+      <div
+        ref={ref}
+        className="flex flex-col items-center justify-between font-sans"
+        style={{
+          width: "1200px",
+          height: "1600px",
+          backgroundColor: "transparent",
+          padding: "110px",
+          color: edition.factoryInk
+        }}
       >
-        Artwork File
-      </button>
-    </div>
-
-    <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
-      這是實際客製化圖案的設計預覽；重點是 Look 的觀看框，而不是單純資料堆疊。
-    </p>
-  </div>
-);
-
-const HiddenFactoryArtwork = React.forwardRef(({ data, deckRows }, ref) => (
-  <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-    <div
-      ref={ref}
-      className="flex flex-col items-center justify-between font-sans text-[#FFFFFF]"
-      style={{
-        width: "1200px",
-        height: "1600px",
-        backgroundColor: "transparent",
-        padding: "110px"
-      }}
-    >
-      <div style={{ width: "100%", textAlign: "center" }}>
-        <p
-          style={{
-            fontSize: "86px",
-            fontWeight: 700,
-            letterSpacing: "0.35em",
-            color: "#FFFFFF",
-            marginBottom: "110px"
-          }}
-        >
-          52!
-        </p>
-
-        <div
-          style={{
-            width: "100%",
-            border: "2px solid rgba(255,255,255,0.75)",
-            padding: "110px 70px",
-            marginBottom: "90px"
-          }}
-        >
+        <div style={{ width: "100%", textAlign: "center" }}>
           <p
             style={{
-              fontSize: "72px",
-              fontWeight: 300,
+              fontSize: "86px",
+              fontWeight: 700,
               letterSpacing: "0.35em",
-              textTransform: "uppercase",
-              color: "#FFFFFF",
-              marginBottom: "90px"
+              color: edition.factoryInk,
+              marginBottom: "110px"
             }}
           >
-            LOOK.
+            52!
           </p>
 
-          <p
-            style={{
-              fontSize: "100px",
-              fontWeight: 300,
-              letterSpacing: "0.08em",
-              color: "#FFFFFF",
-              textAlign: "center",
-              lineHeight: "1.35",
-              margin: 0
-            }}
-          >
-            「{data.text}」
-          </p>
-        </div>
-
-        <p
-          style={{
-            fontSize: "24px",
-            letterSpacing: "0.35em",
-            color: "#888888",
-            marginBottom: "20px"
-          }}
-        >
-          SPACE-TIME SIGNATURE
-        </p>
-
-        <p
-          style={{
-            fontSize: "34px",
-            fontFamily: "monospace",
-            letterSpacing: "0.18em",
-            color: "#FFFFFF",
-            marginBottom: "90px"
-          }}
-        >
-          {data.signature}
-        </p>
-
-        {deckRows.length > 0 && (
           <div
             style={{
               width: "100%",
-              marginBottom: "90px",
-              fontFamily: "monospace",
-              fontSize: "24px",
-              letterSpacing: "0.12em",
-              lineHeight: "1.8",
-              color: "#BBBBBB",
-              textAlign: "center"
+              border: `2px solid ${edition.factoryLine}`,
+              padding: "110px 70px",
+              marginBottom: "90px"
             }}
           >
-            {deckRows.map((row, index) => (
-              <p key={`factory-row-${index}`} style={{ margin: 0 }}>
-                {row.join(" ")}
-              </p>
-            ))}
+            <p
+              style={{
+                fontSize: "72px",
+                fontWeight: 300,
+                letterSpacing: "0.35em",
+                textTransform: "uppercase",
+                color: edition.factoryInk,
+                marginBottom: "50px"
+              }}
+            >
+              LOOK.
+            </p>
+
+            <p
+              style={{
+                fontSize: "24px",
+                letterSpacing: "0.25em",
+                color: edition.factoryMuted,
+                marginBottom: "38px"
+              }}
+            >
+              YOUR MOMENT
+            </p>
+
+            <p
+              style={{
+                fontSize: "86px",
+                fontWeight: 300,
+                letterSpacing: "0.08em",
+                color: edition.factoryInk,
+                textAlign: "center",
+                lineHeight: "1.35",
+                margin: 0
+              }}
+            >
+              「{data.text}」
+            </p>
           </div>
-        )}
-      </div>
 
-      <div style={{ width: "100%", textAlign: "center" }}>
-        <div
-          style={{
-            width: "260px",
-            height: "1px",
-            backgroundColor: "rgba(255,255,255,0.35)",
-            margin: "0 auto 70px"
-          }}
-        />
+          <p
+            style={{
+              fontSize: "24px",
+              letterSpacing: "0.35em",
+              color: edition.factoryMuted,
+              marginBottom: "20px"
+            }}
+          >
+            SPACE-TIME SIGNATURE
+          </p>
 
-        <p
-          style={{
-            fontSize: "26px",
-            letterSpacing: "0.25em",
-            color: "#888888",
-            margin: 0
-          }}
-        >
-          THIS MOMENT WILL NEVER HAPPEN AGAIN
-        </p>
+          <p
+            style={{
+              fontSize: "34px",
+              fontFamily: "monospace",
+              letterSpacing: "0.18em",
+              color: edition.factoryInk,
+              marginBottom: "90px"
+            }}
+          >
+            {data.signature}
+          </p>
+
+          {deckRows.length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                marginBottom: "90px",
+                fontFamily: "monospace",
+                fontSize: "24px",
+                letterSpacing: "0.12em",
+                lineHeight: "1.8",
+                color: edition.factoryInk,
+                textAlign: "center"
+              }}
+            >
+              {deckRows.map((row, index) => (
+                <p key={`factory-row-${index}`} style={{ margin: 0 }}>
+                  {row.join(" ")}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ width: "100%", textAlign: "center" }}>
+          <div
+            style={{
+              width: "260px",
+              height: "1px",
+              backgroundColor: edition.factoryLine,
+              margin: "0 auto 70px"
+            }}
+          />
+
+          <p
+            style={{
+              fontSize: "26px",
+              letterSpacing: "0.25em",
+              color: edition.factoryMuted,
+              margin: 0
+            }}
+          >
+            THIS MOMENT WILL NEVER HAPPEN AGAIN
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 HiddenFactoryArtwork.displayName = "HiddenFactoryArtwork";
 
 const TShirtView = ({ data, onBack }) => {
-  const [secretClicks, setSecretClicks] = useState(0);
+  const [selectedColor, setSelectedColor] = useState("black");
   const factoryRef = useRef(null);
   const deckRows = chunkArray(data.deck || [], 13);
-
-  useEffect(() => {
-    if (secretClicks <= 0) return undefined;
-
-    const timer = setTimeout(() => setSecretClicks(0), 1500);
-    return () => clearTimeout(timer);
-  }, [secretClicks]);
+  const edition = getEditionMeta(selectedColor);
 
   const handlePreorder = () => {
     const params = new URLSearchParams();
@@ -832,7 +855,7 @@ const TShirtView = ({ data, onBack }) => {
     appendFormValue(params, FORM_ENTRY_QUOTE, data.quote || "");
 
     appendFormValue(params, FORM_ENTRY_SIZE, "M");
-    appendFormValue(params, FORM_ENTRY_COLOR, "黑色");
+    appendFormValue(params, FORM_ENTRY_COLOR, edition.formValue);
 
     appendFormValue(
       params,
@@ -854,22 +877,15 @@ const TShirtView = ({ data, onBack }) => {
   };
 
   const handleFactoryExport = async () => {
-    const nextClicks = secretClicks + 1;
-    setSecretClicks(nextClicks);
-
-    if (nextClicks < 5) return;
-
-    setSecretClicks(0);
-
     try {
       await exportElementAsPng(factoryRef.current, `FACTORY-PRINT-${data.signature}.png`, {
         scale: 4,
         backgroundColor: null
       });
 
-      alert("已匯出工廠專用高解析透明印刷檔。");
+      alert("已匯出客製化圖案預覽檔。");
     } catch (error) {
-      console.error("工廠圖檔匯出失敗", error);
+      console.error("圖檔匯出失敗", error);
     }
   };
 
@@ -893,22 +909,19 @@ const TShirtView = ({ data, onBack }) => {
           </h2>
 
           <p className="mx-auto max-w-2xl text-sm font-light leading-relaxed tracking-wider text-neutral-500 md:text-base">
-            商品示意與客製化圖案分開顯示。衣服本身保持安靜，真正的紀錄留在專屬圖案裡。
+            選擇黑色 Gothic Archive 或米白 Renaissance Manuscript。
+            圖案中的 YOUR MOMENT 區域，會替換成你剛剛寫下的那句話。
           </p>
         </div>
 
         <div className="grid w-full gap-10 lg:grid-cols-[1fr_1fr_0.85fr]">
-          <ProductMockup data={data} />
+          <ProductMockup selectedColor={selectedColor} onSelectColor={setSelectedColor} />
 
-          <ArtworkPreview
-            data={data}
-            deckRows={deckRows}
-            onFactoryExport={handleFactoryExport}
-          />
+          <ArtworkPreview data={data} selectedColor={selectedColor} />
 
           <div className="flex flex-col justify-center text-left">
             <p className="mb-6 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-              Order
+              The Order
             </p>
 
             <h3 className="mb-8 text-2xl font-light leading-relaxed tracking-[0.18em] text-white/90">
@@ -918,23 +931,35 @@ const TShirtView = ({ data, onBack }) => {
             </h3>
 
             <div className="mb-10 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
+              <p>目前選擇：{edition.label}｜{edition.title}</p>
               <p>正面保留 52! 與 Look. 的極簡識別。</p>
-              <p>客製化圖案保存牌序、時空簽章與此刻文字。</p>
+              <p>背面保存牌序、時空簽章與此刻文字。</p>
               <p>每一件都來自一次不可重複的生成。</p>
             </div>
 
             <div className="mb-10 border-y border-white/10 py-6 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
               <p>Space-Time Signature</p>
               <p className="mt-2 font-mono text-neutral-400">{data.signature}</p>
-              <p className="mt-5">此刻我看見</p>
+
+              <p className="mt-5">Your Moment</p>
               <p className="mt-2 text-neutral-400">「{data.text}」</p>
+
+              <p className="mt-5">Color</p>
+              <p className="mt-2 text-neutral-400">{edition.formValue}</p>
             </div>
 
             <button
               onClick={handlePreorder}
-              className="mb-6 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200"
+              className="mb-5 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200"
             >
               前往預購 <ArrowRight size={16} />
+            </button>
+
+            <button
+              onClick={handleFactoryExport}
+              className="mb-6 flex w-full items-center justify-center gap-3 border border-white/15 px-12 py-4 text-xs tracking-[0.2em] text-neutral-500 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              匯出客製圖案預覽
             </button>
 
             <button
@@ -951,7 +976,12 @@ const TShirtView = ({ data, onBack }) => {
         </div>
       </motion.div>
 
-      <HiddenFactoryArtwork ref={factoryRef} data={data} deckRows={deckRows} />
+      <HiddenFactoryArtwork
+        ref={factoryRef}
+        data={data}
+        deckRows={deckRows}
+        selectedColor={selectedColor}
+      />
     </>
   );
 };
