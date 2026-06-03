@@ -8,27 +8,33 @@ import { QUOTES } from "./quotes";
 const GOOGLE_FORM_BASE_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform";
 
-// 已確認欄位
 const FORM_ENTRY_DECK = "entry.907849226";
 const FORM_ENTRY_SIGNATURE = "entry.1745604772";
 const FORM_ENTRY_TIME = "entry.284034277";
 const FORM_ENTRY_MOMENT_TEXT = "entry.936038985";
 const FORM_ENTRY_QUOTE = "entry.369992627";
-
 const FORM_ENTRY_SIZE = "entry.508788419";
 const FORM_ENTRY_COLOR = "entry.1607852062";
 const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
 const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
 
-// 目前 GitHub 實際檔名是 .png.png
 const TSHIRT_IMAGES = {
   blackSet: "/images/tshirt-black-gothic-set.png.png",
   blackBack: "/images/tshirt-black-gothic-back.png.png",
   creamSet: "/images/tshirt-cream-renaissance-set.png.png"
 };
 
+const PRICE = "NT$1,280";
+const SHIPPING_TIME = "7–14 個工作天";
+
 const FACTORIAL_52 =
   "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
+
+const CUSTOM_PRODUCT_NOTICE =
+  "我了解本商品為個人化客製商品，將依本人於 52! 網站生成之牌序、Space-Time Signature、生成時間、此刻文字、當下金句與所選款式製作。我了解本商品採全額預付製作。表單送出後，客服將再次確認尺寸、顏色、收件資料與客製內容；完成付款並經確認後，訂單始正式成立並進入製作流程。我了解訂單正式成立後，除商品瑕疵、印刷錯誤或寄送錯誤外，不接受任意取消、退換貨。因本商品係依消費者要求所為之個人化客製商品，並已於訂購前明確告知，將排除七日解除權之適用。";
+
+const PRIVACY_NOTICE =
+  "本表單所蒐集之姓名、電話、Line 帳號或 Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。";
 
 const PLACEHOLDERS = [
   "窗外下著雨",
@@ -145,11 +151,9 @@ const shuffleDeck = () => {
 
 const chunkArray = (array, size) => {
   const chunks = [];
-
   for (let i = 0; i < array.length; i += size) {
     chunks.push(array.slice(i, i + size));
   }
-
   return chunks;
 };
 
@@ -238,7 +242,7 @@ const getEditionMeta = (selectedColor) => {
 const TextButton = ({ children, onClick }) => (
   <button
     onClick={onClick}
-    className="text-xs tracking-[0.25em] text-neutral-500 transition-colors hover:text-white"
+    className="text-sm tracking-[0.18em] text-neutral-300 transition-colors hover:text-white"
   >
     {children}
   </button>
@@ -247,10 +251,16 @@ const TextButton = ({ children, onClick }) => (
 const BackButton = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="mt-12 text-xs tracking-[0.25em] text-neutral-500 transition-colors hover:text-white"
+    className="mt-12 text-sm tracking-[0.2em] text-neutral-300 transition-colors hover:text-white"
   >
     ← 返回
   </button>
+);
+
+const SectionLabel = ({ children }) => (
+  <p className="mb-4 text-xs uppercase tracking-[0.32em] text-neutral-400">
+    {children}
+  </p>
 );
 
 const HomeView = ({ onStart, onAbout, onLookArticle, onSolitude }) => (
@@ -259,56 +269,55 @@ const HomeView = ({ onStart, onAbout, onLookArticle, onSolitude }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    transition={{ duration: 1.4 }}
+    transition={{ duration: 1.2 }}
     className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center justify-center px-6 py-16 text-center"
   >
-    <h1 className="mb-4 text-5xl font-bold tracking-[0.22em] md:text-7xl">
+    <h1 className="mb-5 text-6xl font-bold tracking-[0.2em] text-white md:text-8xl">
       52!
     </h1>
 
-    <p className="mb-14 text-xl font-light tracking-widest text-neutral-400 md:text-2xl">
+    <p className="mb-5 text-lg font-light tracking-[0.22em] text-neutral-200 md:text-2xl">
+      This Moment Will Never Happen Again
+    </p>
+
+    <p className="mb-12 text-base font-light tracking-widest text-neutral-300 md:text-xl">
       此刻唯一。
     </p>
 
-    <div className="mb-14 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
+    <div className="mb-12 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-300 md:text-lg">
       <p>每一次洗牌，</p>
-      <p>都會產生一個幾乎不可能再次出現的排列。</p>
-      <p className="text-neutral-300">就像此刻的你。</p>
+      <p>幾乎都是宇宙第一次出現那個排列。</p>
+      <p>而此刻也是。</p>
     </div>
 
-    <div className="mb-14 max-w-xl border-y border-white/10 py-8 text-sm font-light leading-loose tracking-wider text-neutral-500 md:text-base">
-      <p>一副撲克牌共有 52 張。</p>
-      <p>完全隨機洗牌後，可能產生 52! 種排列。</p>
-      <p>這個數字遠遠超過宇宙中的恆星數量。</p>
-      <p className="mt-6 text-neutral-400">
-        因此，你即將看到的排列，很可能是宇宙歷史上第一次出現。
-      </p>
-      <p className="text-neutral-300">而此刻也是。</p>
+    <div className="mb-10 max-w-xl border-y border-white/20 py-8 text-base font-light leading-loose tracking-wider text-neutral-300 md:text-lg">
+      <p>輸入此刻看見的一件事，</p>
+      <p>生成專屬於你的時空紀錄。</p>
+      <p className="mt-6 text-white">Write what you see. Archive this moment.</p>
     </div>
 
     <button
       onClick={onStart}
-      className="mb-12 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+      className="mb-12 border border-white/30 px-12 py-5 text-sm uppercase tracking-[0.24em] text-white transition-all duration-500 hover:bg-white hover:text-black"
     >
       Look.
     </button>
 
-    <div className="mb-16 flex flex-wrap items-center justify-center gap-6">
+    <div className="mb-14 flex flex-wrap items-center justify-center gap-6">
       <TextButton onClick={onAbout}>為什麼是 52!</TextButton>
       <TextButton onClick={onLookArticle}>為什麼是 Look</TextButton>
       <TextButton onClick={onSolitude}>關於孤獨</TextButton>
     </div>
 
     <div className="max-w-xl text-center">
-      <p className="mb-4 text-[10px] uppercase tracking-[0.4em] text-neutral-700">
+      <p className="mb-4 text-xs uppercase tracking-[0.35em] text-neutral-400">
         Why 52!
       </p>
-      <p className="break-words font-mono text-[10px] leading-relaxed tracking-wider text-neutral-600">
+      <p className="break-words font-mono text-xs leading-relaxed tracking-wider text-neutral-400">
         {FACTORIAL_52}
       </p>
-      <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
-        這是一副撲克牌所有可能排列的數量。大到難以想像。
-        你看到的排列幾乎不會再次出現。正如這個瞬間。
+      <p className="mt-5 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
+        這是一副撲克牌所有可能排列的數量。你看到的排列幾乎不會再次出現。正如這個瞬間。
       </p>
     </div>
   </motion.div>
@@ -323,24 +332,22 @@ const ArticleView = ({ article, onBack, onStart }) => (
     transition={{ duration: 1 }}
     className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
   >
-    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+    <p className="mb-8 text-xs uppercase tracking-[0.4em] text-neutral-400">
       {article.eyebrow}
     </p>
 
-    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+    <h2 className="mb-12 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
       {article.title}
     </h2>
 
-    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
+    <div className="space-y-5 text-base font-light leading-loose tracking-wider text-neutral-300 md:text-lg">
       {article.blocks.map((block, index) => {
-        if (block.type === "space") {
-          return <div key={`space-${index}`} className="h-4" />;
-        }
+        if (block.type === "space") return <div key={`space-${index}`} className="h-4" />;
 
         if (block.type === "factorial") {
           return (
             <div key={`factorial-${index}`} className="py-8">
-              <p className="break-words font-mono text-[10px] leading-relaxed tracking-wider text-neutral-600">
+              <p className="break-words font-mono text-sm leading-relaxed tracking-wider text-neutral-400">
                 {FACTORIAL_52}
               </p>
             </div>
@@ -348,10 +355,7 @@ const ArticleView = ({ article, onBack, onStart }) => (
         }
 
         return (
-          <p
-            key={`p-${index}`}
-            className={block.highlight ? "pt-4 text-white/80" : undefined}
-          >
+          <p key={`p-${index}`} className={block.highlight ? "pt-4 text-white" : undefined}>
             {block.text}
           </p>
         );
@@ -360,7 +364,7 @@ const ArticleView = ({ article, onBack, onStart }) => (
 
     <button
       onClick={onStart}
-      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
+      className="mt-14 border border-white/30 px-10 py-4 text-sm uppercase tracking-[0.22em] text-white transition-all duration-500 hover:bg-white hover:text-black"
     >
       {article.cta}
     </button>
@@ -382,7 +386,7 @@ const LookView = ({ onArchive }) => {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowInput(true), 3000);
+    const timer = setTimeout(() => setShowInput(true), 1800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -412,7 +416,7 @@ const LookView = ({ onArchive }) => {
         deck: shuffleDeck(),
         quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
       });
-    }, 1200);
+    }, 900);
   };
 
   return (
@@ -421,23 +425,19 @@ const LookView = ({ onArchive }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.4 }}
+      transition={{ duration: 1.2 }}
       className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16"
     >
-      <div
-        className={`text-center transition-all duration-1000 ${
-          showInput ? "mb-10 opacity-30" : "mb-0 opacity-100"
-        }`}
-      >
-        <p className="mb-2 font-mono text-lg tracking-widest text-neutral-400">
+      <div className={`text-center transition-all duration-1000 ${showInput ? "mb-10 opacity-60" : "mb-0 opacity-100"}`}>
+        <p className="mb-2 font-mono text-lg tracking-widest text-neutral-300">
           {formatDate(currentTime)}
         </p>
-        <p className="font-mono text-4xl tracking-widest text-white/90">
+        <p className="font-mono text-4xl tracking-widest text-white">
           {formatTime(currentTime)}
         </p>
 
         {!showInput && (
-          <p className="mt-10 animate-pulse font-light tracking-widest text-neutral-500">
+          <p className="mt-10 animate-pulse text-base font-light tracking-widest text-neutral-300">
             這一刻，不會再重來。
           </p>
         )}
@@ -453,25 +453,10 @@ const LookView = ({ onArchive }) => {
             transition={{ duration: 1 }}
             className="flex w-full flex-col items-center"
           >
-            <div className="mb-10 flex flex-col items-center text-center text-sm font-light leading-relaxed tracking-[0.15em] text-neutral-500">
-              <p className="mb-2">這不是創作。</p>
-              <p className="mb-2">不是願望。</p>
-              <p>不是名言。</p>
-
-              <div className="h-6" />
-
-              <p className="mb-2">只是誠實寫下，</p>
-              <p>此刻最真實的一件事。</p>
-
-              <div className="h-6" />
-
-              <p className="mb-2">也許是一個念頭。</p>
-              <p className="mb-2">也許是一個事實。</p>
-              <p>也許只是一種感受。</p>
-
-              <div className="h-8" />
-
-              <p className="tracking-[0.2em] text-neutral-300">你看見了什麼？</p>
+            <div className="mb-10 flex flex-col items-center text-center text-base font-light leading-relaxed tracking-wider text-neutral-300">
+              <p className="mb-3 text-2xl tracking-[0.2em] text-white">Look.</p>
+              <p>請寫下一件，</p>
+              <p>此刻真實存在的事。</p>
             </div>
 
             <input
@@ -481,18 +466,18 @@ const LookView = ({ onArchive }) => {
               maxLength={40}
               disabled={isArchiving}
               placeholder={PLACEHOLDERS[placeholderIndex]}
-              className="w-full border-b border-white/20 bg-transparent pb-4 text-center text-2xl font-light tracking-wide text-white placeholder-neutral-800 transition-colors focus:border-white/60 focus:outline-none disabled:opacity-50 md:text-3xl"
+              className="w-full border-b border-white/30 bg-transparent pb-4 text-center text-3xl font-light tracking-wide text-white placeholder-neutral-500 transition-colors focus:border-white focus:outline-none disabled:opacity-50 md:text-4xl"
               autoFocus
             />
 
-            <p className="mt-5 text-center text-xs font-light tracking-wider text-neutral-700">
+            <p className="mt-5 text-center text-sm font-light tracking-wider text-neutral-400">
               例如：我有點累／窗外在下雨／我不知道
             </p>
 
             <button
               onClick={handleAction}
               disabled={!input.trim() || isArchiving}
-              className="mt-14 bg-white px-12 py-4 text-sm tracking-[0.3em] text-black transition-all duration-700 hover:bg-neutral-200 disabled:opacity-0"
+              className="mt-14 bg-white px-12 py-4 text-sm tracking-[0.28em] text-black transition-all duration-700 hover:bg-neutral-200 disabled:opacity-0"
             >
               {isArchiving ? "封存中..." : "我看見了"}
             </button>
@@ -526,62 +511,61 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
     >
       <div
         ref={cardRef}
-        className="relative flex w-full max-w-sm flex-shrink-0 flex-col items-center overflow-hidden border border-white/10 bg-[#0E0E0E] p-12 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        className="relative flex w-full max-w-sm flex-shrink-0 flex-col items-center overflow-hidden border border-white/20 bg-[#0E0E0E] p-10 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
       >
-        <h2 className="mb-16 text-2xl font-bold tracking-[0.3em] text-white/90">
+        <h2 className="mb-12 text-3xl font-bold tracking-[0.3em] text-white">
           52!
         </h2>
 
-        <p className="mb-8 text-xs tracking-[0.3em] text-neutral-600">
+        <p className="mb-6 text-sm tracking-[0.25em] text-neutral-400">
           此刻我看見
         </p>
 
-        <p className="mb-10 break-words px-2 text-2xl font-light leading-relaxed tracking-wider text-white/95 md:text-3xl">
+        <p className="mb-10 break-words px-2 text-3xl font-light leading-relaxed tracking-wider text-white">
           「{data.text}」
         </p>
 
-        <p className="mb-12 px-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
+        <p className="mb-12 px-4 text-base font-light leading-relaxed tracking-wider text-neutral-300">
           {data.quote}
         </p>
 
         {deckText && (
-          <div className="mb-12 w-full border-y border-white/10 py-5">
-            <p className="mb-3 text-[8px] uppercase tracking-[0.35em] text-neutral-700">
+          <div className="mb-12 w-full border-y border-white/15 py-5">
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-neutral-400">
               Deck Sequence
             </p>
-            <p className="break-words font-mono text-[9px] leading-relaxed tracking-wider text-neutral-600">
+            <p className="break-words font-mono text-xs leading-relaxed tracking-wider text-neutral-400">
               {deckText}
             </p>
           </div>
         )}
 
-        <div className="flex w-full flex-col items-center gap-2 break-all px-4 font-mono text-[10px] tracking-widest text-neutral-500 md:text-xs">
+        <div className="flex w-full flex-col items-center gap-2 break-all px-4 font-mono text-xs tracking-widest text-neutral-400">
           <p>
             {data.date} {data.time}
           </p>
           <p className="mt-4">{data.signature}</p>
         </div>
 
-        <p className="mt-16 text-[9px] uppercase tracking-[0.2em] text-neutral-700">
+        <p className="mt-14 text-xs uppercase tracking-[0.22em] text-neutral-400">
           This moment will never happen again.
         </p>
       </div>
 
       <div className="flex w-full max-w-sm flex-col items-start text-left">
-        <h2 className="mb-10 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+        <h2 className="mb-10 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
           這一刻，被保存了。
         </h2>
 
-        <div className="mb-12 space-y-4 text-sm font-light leading-relaxed tracking-widest text-neutral-400 md:text-base">
+        <div className="mb-12 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-300">
           <p>這不是占卜結果。</p>
           <p>它只是宇宙在這一刻留下的一個座標。</p>
           <p>而你留下了自己的觀察。</p>
         </div>
 
-        <div className="mb-14 space-y-4 text-sm font-light leading-relaxed tracking-widest text-neutral-500 md:text-base">
+        <div className="mb-14 space-y-4 text-base font-light leading-relaxed tracking-wider text-neutral-400">
           <p>你可以讓它停留在這裡。</p>
-          <p>或者。</p>
-          <p>把它穿在身上。</p>
+          <p>或者，把它穿在身上。</p>
         </div>
 
         <div className="flex w-full flex-col gap-5">
@@ -594,14 +578,14 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
 
           <button
             onClick={handleDownload}
-            className="flex w-full items-center justify-center gap-3 border border-white/20 px-8 py-4 text-sm tracking-[0.2em] text-white transition-colors hover:bg-white/10"
+            className="flex w-full items-center justify-center gap-3 border border-white/30 px-8 py-4 text-sm tracking-[0.2em] text-white transition-colors hover:bg-white/10"
           >
             <Download size={16} /> 下載紀錄卡
           </button>
 
           <button
             onClick={onReset}
-            className="mt-4 w-full text-center text-xs tracking-[0.2em] text-neutral-500 transition-colors hover:text-white"
+            className="mt-4 w-full text-center text-sm tracking-[0.2em] text-neutral-300 transition-colors hover:text-white"
           >
             重新觀看
           </button>
@@ -614,10 +598,10 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
 const EditionButton = ({ active, children, onClick }) => (
   <button
     onClick={onClick}
-    className={`border px-5 py-3 text-xs tracking-[0.2em] transition-colors ${
+    className={`border px-5 py-3 text-sm tracking-[0.18em] transition-colors ${
       active
         ? "border-white bg-white text-black"
-        : "border-white/15 text-neutral-500 hover:border-white/40 hover:text-white"
+        : "border-white/25 text-neutral-300 hover:border-white/60 hover:text-white"
     }`}
   >
     {children}
@@ -629,11 +613,9 @@ const ProductMockup = ({ selectedColor, onSelectColor }) => {
 
   return (
     <div className="flex flex-col">
-      <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-        The Garment
-      </p>
+      <SectionLabel>The Garment</SectionLabel>
 
-      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
+      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/20 bg-[#111]">
         <img
           src={edition.setImage}
           alt={`52! ${edition.label} T-shirt mockup`}
@@ -650,7 +632,7 @@ const ProductMockup = ({ selectedColor, onSelectColor }) => {
         </EditionButton>
       </div>
 
-      <p className="mt-5 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+      <p className="mt-5 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
         {edition.description}
       </p>
     </div>
@@ -662,11 +644,9 @@ const ArtworkPreview = ({ data, selectedColor }) => {
 
   return (
     <div className="flex flex-col">
-      <p className="mb-4 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-        Your Moment
-      </p>
+      <SectionLabel>Your Moment</SectionLabel>
 
-      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#0E0E0E]">
+      <div className="relative flex aspect-[4/5] w-full max-w-sm items-center justify-center overflow-hidden border border-white/20 bg-[#0E0E0E]">
         <img
           src={edition.artworkImage}
           alt={`52! ${edition.label} artwork preview`}
@@ -674,18 +654,18 @@ const ArtworkPreview = ({ data, selectedColor }) => {
         />
       </div>
 
-      <div className="mt-5 space-y-3 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+      <div className="mt-5 space-y-3 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
         <p>
-          圖案中的 <span className="text-neutral-400">YOUR MOMENT</span> 區域，
+          圖案中的 <span className="text-white">YOUR MOMENT</span> 區域，
           會替換成你在 Look 頁面寫下的那句話。
         </p>
 
-        <p className="text-neutral-400">
+        <p className="text-neutral-300">
           此刻我看見：「{data.text}」
         </p>
 
         <p>
-          當下金句：<span className="text-neutral-400">{data.quote}</span>
+          當下金句：<span className="text-neutral-300">{data.quote}</span>
         </p>
       </div>
     </div>
@@ -857,21 +837,10 @@ const TShirtView = ({ data, onBack }) => {
     appendFormValue(params, FORM_ENTRY_TIME, `${data.date} ${data.time}`);
     appendFormValue(params, FORM_ENTRY_MOMENT_TEXT, data.text);
     appendFormValue(params, FORM_ENTRY_QUOTE, data.quote || "");
-
     appendFormValue(params, FORM_ENTRY_SIZE, "M");
     appendFormValue(params, FORM_ENTRY_COLOR, edition.formValue);
-
-    appendFormValue(
-      params,
-      FORM_ENTRY_CUSTOM_NOTICE,
-      "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序、時空簽章與此刻文字專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。"
-    );
-
-    appendFormValue(
-      params,
-      FORM_ENTRY_PRIVACY_NOTICE,
-      "本表單所蒐集之姓名、電話、Line 帳號或 Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
-    );
+    appendFormValue(params, FORM_ENTRY_CUSTOM_NOTICE, CUSTOM_PRODUCT_NOTICE);
+    appendFormValue(params, FORM_ENTRY_PRIVACY_NOTICE, PRIVACY_NOTICE);
 
     window.open(
       `${GOOGLE_FORM_BASE_URL}?${params.toString()}`,
@@ -904,79 +873,93 @@ const TShirtView = ({ data, onBack }) => {
         className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-6 py-12"
       >
         <div className="mb-14 text-center">
-          <p className="mb-4 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
+          <p className="mb-4 text-xs uppercase tracking-[0.4em] text-neutral-400">
             T-Shirt
           </p>
 
-          <h2 className="mb-6 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
+          <h2 className="mb-6 text-3xl font-light tracking-[0.18em] text-white md:text-4xl">
             把一個瞬間穿在身上。
           </h2>
 
-          <p className="mx-auto max-w-2xl text-sm font-light leading-relaxed tracking-wider text-neutral-500 md:text-base">
+          <p className="mx-auto max-w-2xl text-base font-light leading-relaxed tracking-wider text-neutral-300">
             選擇黑色 Gothic Archive 或米白 Renaissance Manuscript。
             圖案中的 YOUR MOMENT 區域，會替換成你剛剛寫下的那句話。
           </p>
         </div>
 
-        <div className="grid w-full gap-10 lg:grid-cols-[1fr_1fr_0.85fr]">
+        <div className="grid w-full gap-10 lg:grid-cols-[1fr_1fr_0.9fr]">
           <ProductMockup selectedColor={selectedColor} onSelectColor={setSelectedColor} />
 
           <ArtworkPreview data={data} selectedColor={selectedColor} />
 
           <div className="flex flex-col justify-center text-left">
-            <p className="mb-6 text-[10px] uppercase tracking-[0.35em] text-neutral-700">
-              The Order
-            </p>
+            <SectionLabel>52! Custom T-Shirt</SectionLabel>
 
-            <h3 className="mb-8 text-2xl font-light leading-relaxed tracking-[0.18em] text-white/90">
-              這不是一句標語。
-              <br />
-              是一個被看見的瞬間。
-            </h3>
-
-            <div className="mb-10 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
-              <p>目前選擇：{edition.label}｜{edition.title}</p>
-              <p>正面保留 52! 與 Look. 的極簡識別。</p>
-              <p>背面保存牌序、時空簽章與此刻文字。</p>
-              <p>每一件都來自一次不可重複的生成。</p>
+            <div className="mb-8">
+              <p className="text-4xl font-light tracking-wider text-white">{PRICE}</p>
+              <p className="mt-2 text-sm tracking-wider text-neutral-400">首批預購價</p>
             </div>
 
-            <div className="mb-10 border-y border-white/10 py-6 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
-              <p>Space-Time Signature</p>
-              <p className="mt-2 font-mono text-neutral-400">{data.signature}</p>
+            <div className="mb-10 space-y-3 text-base leading-relaxed tracking-wider text-neutral-300">
+              <p>✓ 個人化客製設計</p>
+              <p>✓ 專屬 Space-Time Signature</p>
+              <p>✓ 專屬牌序與此刻文字</p>
+              <p>✓ 全額預付製作</p>
+              <p>✓ 約 {SHIPPING_TIME} 出貨</p>
+            </div>
 
-              <p className="mt-5">Your Moment</p>
-              <p className="mt-2 text-neutral-400">「{data.text}」</p>
+            <div className="mb-10 border-y border-white/20 py-6 text-sm font-light leading-relaxed tracking-wider text-neutral-300">
+              <p className="text-white">目前選擇</p>
+              <p className="mt-2">{edition.label}｜{edition.title}</p>
 
-              <p className="mt-5">當下金句</p>
-              <p className="mt-2 text-neutral-400">{data.quote}</p>
+              <p className="mt-5 text-white">Your Moment</p>
+              <p className="mt-2">「{data.text}」</p>
 
-              <p className="mt-5">Color</p>
-              <p className="mt-2 text-neutral-400">{edition.formValue}</p>
+              <p className="mt-5 text-white">當下金句</p>
+              <p className="mt-2">{data.quote}</p>
+
+              <p className="mt-5 text-white">Space-Time Signature</p>
+              <p className="mt-2 break-all font-mono">{data.signature}</p>
+            </div>
+
+            <div className="mb-8 border border-white/20 p-5 text-sm font-light leading-relaxed tracking-wider text-neutral-300">
+              <p className="mb-4 text-base text-white">付款與製作說明</p>
+              <p className="mb-3">
+                本商品印有您專屬生成的 Space-Time Signature、牌序與此刻文字，屬個人化客製商品。
+              </p>
+              <p className="mb-3">
+                為避免資源浪費與衝動訂製，52! 客製 T-shirt 採全額預付製作。目前僅接受銀行／ATM 轉帳，完成付款並經確認後，訂單才會正式成立並進入製作流程。
+              </p>
+              <p className="mb-3">
+                當您完成匯款的那一刻，也代表您對這個當下做出了確認。
+              </p>
+              <p>
+                接單確認後，約需 {SHIPPING_TIME} 製作並寄出。因本商品係依消費者要求所為之個人化客製商品，除商品瑕疵、印刷錯誤或寄送錯誤外，不接受任意取消、退換貨，並排除七日解除權之適用。
+              </p>
             </div>
 
             <button
               onClick={handlePreorder}
-              className="mb-5 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.2em] text-black transition-colors hover:bg-neutral-200"
+              className="mb-5 flex w-full items-center justify-center gap-3 bg-white px-12 py-4 text-sm tracking-[0.22em] text-black transition-colors hover:bg-neutral-200"
             >
               前往預購 <ArrowRight size={16} />
             </button>
 
             <button
               onClick={handleFactoryExport}
-              className="mb-6 flex w-full items-center justify-center gap-3 border border-white/15 px-12 py-4 text-xs tracking-[0.2em] text-neutral-500 transition-colors hover:bg-white/5 hover:text-white"
+              className="mb-6 flex w-full items-center justify-center gap-3 border border-white/25 px-12 py-4 text-xs tracking-[0.2em] text-neutral-300 transition-colors hover:bg-white/5 hover:text-white"
             >
               匯出客製圖案預覽
             </button>
 
             <button
               onClick={onBack}
-              className="text-xs tracking-[0.1em] text-neutral-500 transition-colors hover:text-white"
+              className="text-sm tracking-[0.1em] text-neutral-300 transition-colors hover:text-white"
             >
               ← 返回觀看紀錄
             </button>
 
-            <p className="mt-8 text-xs font-light leading-relaxed tracking-wider text-neutral-600">
+            <p className="mt-8 text-sm font-light leading-relaxed tracking-wider text-neutral-400">
               * 點擊預購將前往訂製表單，專屬牌序、時空簽章、此刻文字與當下金句會自動帶入。
             </p>
           </div>
