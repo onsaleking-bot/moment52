@@ -17,6 +17,12 @@ const FORM_ENTRY_COLOR = "entry.1607852062";
 const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
 const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
 
+// 建議之後在 Google Form 新增「此刻我看見」欄位，再把 entry id 填進來。
+// 目前先留空，程式仍可正常運作。
+const FORM_ENTRY_MOMENT_TEXT = "";
+
+const TSHIRT_MOCKUP_SRC = "/tshirt-front.png.png";
+
 const FACTORIAL_52 =
   "80,658,175,170,943,878,571,660,636,856,403,766,975,289,505,440,883,277,824,000,000,000,000";
 
@@ -37,6 +43,112 @@ const PLACEHOLDERS = [
   "我正在等待"
 ];
 
+const SUITS = ["♠", "♥", "♦", "♣"];
+const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+
+const ARTICLES = {
+  about: {
+    eyebrow: "About 52!",
+    title: "為什麼是 52!",
+    cta: "看見此刻",
+    blocks: [
+      { type: "p", text: "一副撲克牌共有 52 張。" },
+      { type: "p", text: "完全隨機洗牌後，可能產生 52! 種排列。" },
+      { type: "p", text: "這個數量遠遠超過宇宙中的恆星數量。" },
+      { type: "factorial" },
+      { type: "p", text: "因此，你看到的排列，幾乎不會再次出現。" },
+      { type: "p", text: "正如這個瞬間。" },
+      { type: "p", text: "它正在發生。" },
+      { type: "p", text: "然後永遠消失。" }
+    ]
+  },
+  look: {
+    eyebrow: "Look.",
+    title: "為什麼不是 See？",
+    cta: "開始觀看",
+    blocks: [
+      { type: "p", text: "因為 See 是被動的。" },
+      { type: "p", text: "你看見下雨。" },
+      { type: "p", text: "你看見訊息未回。" },
+      { type: "p", text: "你看見事情發生。" },
+      { type: "space" },
+      { type: "p", text: "而 Look 是主動的。" },
+      { type: "p", text: "看看這一刻。" },
+      { type: "p", text: "看看自己正在想什麼。" },
+      { type: "p", text: "看看自己是否正在替事情編造故事。" },
+      { type: "p", text: "看看自己是否正在害怕。" },
+      { type: "p", text: "看看自己是否正在期待。" },
+      { type: "space" },
+      { type: "p", text: "52! 不是為了給你答案。" },
+      { type: "p", text: "而是邀請你停下來觀看。" },
+      { type: "p", text: "Look.", highlight: true }
+    ]
+  },
+  solitude: {
+    eyebrow: "Essay",
+    title: "關於孤獨",
+    cta: "看見此刻",
+    blocks: [
+      { type: "p", text: "多數人活在自己的內心。" },
+      { type: "p", text: "讀著自己的劇本。" },
+      { type: "space" },
+      { type: "p", text: "於是孤獨並不是沒有人陪伴。" },
+      { type: "p", text: "而是很少有人願意一起觀看。" },
+      { type: "space" },
+      { type: "p", text: "看見事實。" },
+      { type: "p", text: "看見恐懼。" },
+      { type: "p", text: "看見期待。" },
+      { type: "p", text: "看見自己。" },
+      { type: "space" },
+      { type: "p", text: "真正的觀看無法被說服。" },
+      { type: "p", text: "只能被發現。" },
+      { type: "p", text: "Look.", highlight: true }
+    ]
+  }
+};
+
+const createDeck = () =>
+  SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
+
+const getRandomInt = (maxExclusive) => {
+  if (maxExclusive <= 0) return 0;
+
+  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+    const range = 0xffffffff + 1;
+    const limit = Math.floor(range / maxExclusive) * maxExclusive;
+    const array = new Uint32Array(1);
+
+    do {
+      window.crypto.getRandomValues(array);
+    } while (array[0] >= limit);
+
+    return array[0] % maxExclusive;
+  }
+
+  return Math.floor(Math.random() * maxExclusive);
+};
+
+const shuffleDeck = () => {
+  const deck = createDeck();
+
+  for (let i = deck.length - 1; i > 0; i -= 1) {
+    const j = getRandomInt(i + 1);
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  return deck;
+};
+
+const chunkArray = (array, size) => {
+  const chunks = [];
+
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+
+  return chunks;
+};
+
 const generateSignature = () => {
   const chars = "0123456789ABCDEF";
   let hash = "";
@@ -48,7 +160,7 @@ const generateSignature = () => {
       hash += chars[val >> 4] + chars[val & 15];
     });
   } else {
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i += 1) {
       hash += chars[Math.floor(Math.random() * 16)];
     }
   }
@@ -58,16 +170,12 @@ const generateSignature = () => {
 
 const formatDate = (date) => {
   const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(
-    date.getDate()
-  )}`;
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
 };
 
 const formatTime = (date) => {
   const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
-    date.getSeconds()
-  )}`;
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 };
 
 const exportElementAsPng = async (element, filename, options = {}) => {
@@ -90,6 +198,11 @@ const exportElementAsPng = async (element, filename, options = {}) => {
   link.click();
 };
 
+const appendFormValue = (params, key, value) => {
+  if (!key) return;
+  params.set(key, value ?? "");
+};
+
 const TextButton = ({ children, onClick }) => (
   <button
     onClick={onClick}
@@ -108,7 +221,7 @@ const BackButton = ({ onClick }) => (
   </button>
 );
 
-const HomeView = ({ onStart, onAbout, onLook, onSolitude }) => (
+const HomeView = ({ onStart, onAbout, onLookArticle, onSolitude }) => (
   <motion.div
     key="home"
     initial={{ opacity: 0 }}
@@ -150,7 +263,7 @@ const HomeView = ({ onStart, onAbout, onLook, onSolitude }) => (
 
     <div className="mb-16 flex flex-wrap items-center justify-center gap-6">
       <TextButton onClick={onAbout}>為什麼是 52!</TextButton>
-      <TextButton onClick={onLook}>為什麼是 Look</TextButton>
+      <TextButton onClick={onLookArticle}>為什麼是 Look</TextButton>
       <TextButton onClick={onSolitude}>關於孤獨</TextButton>
     </div>
 
@@ -169,9 +282,9 @@ const HomeView = ({ onStart, onAbout, onLook, onSolitude }) => (
   </motion.div>
 );
 
-const AboutView = ({ onBack, onStart }) => (
+const ArticleView = ({ article, onBack, onStart }) => (
   <motion.div
-    key="about"
+    key="article"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
@@ -179,137 +292,45 @@ const AboutView = ({ onBack, onStart }) => (
     className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
   >
     <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
-      About 52!
+      {article.eyebrow}
     </p>
 
     <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
-      為什麼是 52!
+      {article.title}
     </h2>
 
     <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
-      <p>一副撲克牌共有 52 張。</p>
-      <p>完全隨機洗牌後，可能產生 52! 種排列。</p>
-      <p>這個數量遠遠超過宇宙中的恆星數量。</p>
+      {article.blocks.map((block, index) => {
+        if (block.type === "space") {
+          return <div key={`space-${index}`} className="h-4" />;
+        }
 
-      <div className="py-8">
-        <p className="break-words font-mono text-[10px] leading-relaxed tracking-wider text-neutral-600">
-          {FACTORIAL_52}
-        </p>
-      </div>
+        if (block.type === "factorial") {
+          return (
+            <div key={`factorial-${index}`} className="py-8">
+              <p className="break-words font-mono text-[10px] leading-relaxed tracking-wider text-neutral-600">
+                {FACTORIAL_52}
+              </p>
+            </div>
+          );
+        }
 
-      <p>因此，你看到的排列，幾乎不會再次出現。</p>
-      <p>正如這個瞬間。</p>
-      <p>它正在發生。</p>
-      <p>然後永遠消失。</p>
+        return (
+          <p
+            key={`p-${index}`}
+            className={block.highlight ? "pt-4 text-white/80" : undefined}
+          >
+            {block.text}
+          </p>
+        );
+      })}
     </div>
 
     <button
       onClick={onStart}
       className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
     >
-      看見此刻
-    </button>
-
-    <BackButton onClick={onBack} />
-  </motion.div>
-);
-
-const LookArticleView = ({ onBack, onStart }) => (
-  <motion.div
-    key="look-article"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1 }}
-    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
-  >
-    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
-      Look.
-    </p>
-
-    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
-      為什麼不是 See？
-    </h2>
-
-    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
-      <p>因為 See 是被動的。</p>
-      <p>你看見下雨。</p>
-      <p>你看見訊息未回。</p>
-      <p>你看見事情發生。</p>
-
-      <div className="h-4" />
-
-      <p>而 Look 是主動的。</p>
-      <p>看看這一刻。</p>
-      <p>看看自己正在想什麼。</p>
-      <p>看看自己是否正在替事情編造故事。</p>
-      <p>看看自己是否正在害怕。</p>
-      <p>看看自己是否正在期待。</p>
-
-      <div className="h-4" />
-
-      <p>52! 不是為了給你答案。</p>
-      <p>而是邀請你停下來觀看。</p>
-      <p className="text-white/80">Look.</p>
-    </div>
-
-    <button
-      onClick={onStart}
-      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
-    >
-      開始觀看
-    </button>
-
-    <BackButton onClick={onBack} />
-  </motion.div>
-);
-
-const SolitudeView = ({ onBack, onStart }) => (
-  <motion.div
-    key="solitude"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1 }}
-    className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
-  >
-    <p className="mb-8 text-[10px] uppercase tracking-[0.45em] text-neutral-700">
-      Essay
-    </p>
-
-    <h2 className="mb-12 text-3xl font-light tracking-[0.2em] text-white/90 md:text-4xl">
-      關於孤獨
-    </h2>
-
-    <div className="space-y-5 text-sm font-light leading-loose tracking-wider text-neutral-400 md:text-base">
-      <p>多數人活在自己的內心。</p>
-      <p>讀著自己的劇本。</p>
-
-      <div className="h-4" />
-
-      <p>於是孤獨並不是沒有人陪伴。</p>
-      <p>而是很少有人願意一起觀看。</p>
-
-      <div className="h-4" />
-
-      <p>看見事實。</p>
-      <p>看見恐懼。</p>
-      <p>看見期待。</p>
-      <p>看見自己。</p>
-
-      <div className="h-4" />
-
-      <p>真正的觀看無法被說服。</p>
-      <p>只能被發現。</p>
-
-      <p className="pt-4 text-white/80">Look.</p>
-    </div>
-
-    <button
-      onClick={onStart}
-      className="mt-14 border border-white/20 px-10 py-4 text-sm uppercase tracking-[0.2em] text-white/80 transition-all duration-500 hover:bg-white hover:text-black"
-    >
-      看見此刻
+      {article.cta}
     </button>
 
     <BackButton onClick={onBack} />
@@ -334,7 +355,7 @@ const LookView = ({ onArchive }) => {
   }, []);
 
   useEffect(() => {
-    if (!showInput) return;
+    if (!showInput) return undefined;
 
     const timer = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
@@ -356,6 +377,7 @@ const LookView = ({ onArchive }) => {
         date: formatDate(now),
         time: formatTime(now),
         signature: generateSignature(),
+        deck: shuffleDeck(),
         quote: QUOTES[Math.floor(Math.random() * QUOTES.length)]
       });
     }, 1200);
@@ -451,6 +473,7 @@ const LookView = ({ onArchive }) => {
 
 const ArchiveView = ({ data, onTShirt, onReset }) => {
   const cardRef = useRef(null);
+  const deckText = data.deck?.join(" ") || "";
 
   const handleDownload = async () => {
     try {
@@ -485,9 +508,20 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
           「{data.text}」
         </p>
 
-        <p className="mb-16 px-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
+        <p className="mb-12 px-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
           {data.quote}
         </p>
+
+        {deckText && (
+          <div className="mb-12 w-full border-y border-white/10 py-5">
+            <p className="mb-3 text-[8px] uppercase tracking-[0.35em] text-neutral-700">
+              Deck Sequence
+            </p>
+            <p className="break-words font-mono text-[9px] leading-relaxed tracking-wider text-neutral-600">
+              {deckText}
+            </p>
+          </div>
+        )}
 
         <div className="flex w-full flex-col items-center gap-2 break-all px-4 font-mono text-[10px] tracking-widest text-neutral-500 md:text-xs">
           <p>
@@ -548,30 +582,49 @@ const ArchiveView = ({ data, onTShirt, onReset }) => {
 const TShirtView = ({ data, onBack }) => {
   const [secretClicks, setSecretClicks] = useState(0);
   const factoryRef = useRef(null);
+  const deckRows = chunkArray(data.deck || [], 13);
 
   useEffect(() => {
-    if (secretClicks <= 0) return;
+    if (secretClicks <= 0) return undefined;
 
     const timer = setTimeout(() => setSecretClicks(0), 1500);
     return () => clearTimeout(timer);
   }, [secretClicks]);
 
   const handlePreorder = () => {
-    const params = new URLSearchParams({
-      usp: "pp_url",
-      [FORM_ENTRY_DECK]: data.text,
-      [FORM_ENTRY_SIGNATURE]: data.signature,
-      [FORM_ENTRY_TIME]: `${data.date} ${data.time}`,
-      [FORM_ENTRY_QUOTE]: data.quote || data.text,
-      [FORM_ENTRY_SIZE]: "M",
-      [FORM_ENTRY_COLOR]: "黑色",
-      [FORM_ENTRY_CUSTOM_NOTICE]:
-        "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。",
-      [FORM_ENTRY_PRIVACY_NOTICE]:
-        "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
-    });
+    const params = new URLSearchParams();
+    const deckText = data.deck?.join(" ") || "";
 
-    window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank");
+    appendFormValue(params, "usp", "pp_url");
+    appendFormValue(params, FORM_ENTRY_DECK, deckText);
+    appendFormValue(params, FORM_ENTRY_SIGNATURE, data.signature);
+    appendFormValue(params, FORM_ENTRY_TIME, `${data.date} ${data.time}`);
+
+    appendFormValue(
+      params,
+      FORM_ENTRY_QUOTE,
+      FORM_ENTRY_MOMENT_TEXT
+        ? data.quote || ""
+        : `${data.quote || ""}\n\n此刻我看見：${data.text}`
+    );
+
+    appendFormValue(params, FORM_ENTRY_MOMENT_TEXT, data.text);
+    appendFormValue(params, FORM_ENTRY_SIZE, "M");
+    appendFormValue(params, FORM_ENTRY_COLOR, "黑色");
+
+    appendFormValue(
+      params,
+      FORM_ENTRY_CUSTOM_NOTICE,
+      "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。"
+    );
+
+    appendFormValue(
+      params,
+      FORM_ENTRY_PRIVACY_NOTICE,
+      "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
+    );
+
+    window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   const handleFactoryExport = async () => {
@@ -607,7 +660,7 @@ const TShirtView = ({ data, onBack }) => {
         <div className="grid w-full items-center gap-16 md:grid-cols-2">
           <div className="relative mx-auto flex aspect-[3/4] w-full max-w-sm items-center justify-center overflow-hidden border border-white/10 bg-[#111]">
             <img
-              src="/tshirt-front.png.png"
+              src={TSHIRT_MOCKUP_SRC}
               alt="T-shirt Mockup"
               className="absolute inset-0 h-full w-full object-cover opacity-30 grayscale mix-blend-screen"
             />
@@ -621,9 +674,17 @@ const TShirtView = ({ data, onBack }) => {
                 {data.signature}
               </p>
 
-              <p className="mb-14 font-mono text-[8px] tracking-[0.2em] text-neutral-600 md:text-[10px]">
+              <p className="mb-10 font-mono text-[8px] tracking-[0.2em] text-neutral-600 md:text-[10px]">
                 SPACE-TIME SIGNATURE
               </p>
+
+              {deckRows.length > 0 && (
+                <div className="mb-10 w-full max-w-xs space-y-1 font-mono text-[7px] leading-relaxed tracking-wider text-neutral-500 md:text-[8px]">
+                  {deckRows.map((row, index) => (
+                    <p key={`mockup-row-${index}`}>{row.join(" ")}</p>
+                  ))}
+                </div>
+              )}
 
               <p className="mb-6 text-[10px] tracking-[0.3em] text-neutral-400 md:text-xs">
                 THIS MOMENT WILL NEVER HAPPEN AGAIN
@@ -650,12 +711,12 @@ const TShirtView = ({ data, onBack }) => {
             <div className="mb-12 space-y-4 text-sm font-light leading-relaxed tracking-wider text-neutral-400 md:text-base">
               <p>這不是一句標語。</p>
               <p>而是一個再也不會重複的時刻。</p>
-              <p>52! 記錄了那一刻的時空簽章。</p>
+              <p>52! 記錄了那一刻的牌序與時空簽章。</p>
               <p>而這句話，記錄了那一刻的你。</p>
             </div>
 
             <p className="mb-10 text-xs font-light leading-relaxed tracking-wider text-neutral-500">
-              * 點擊預購將前往訂製表單，您的專屬時空簽章與句子將會自動帶入。
+              * 點擊預購將前往訂製表單，您的專屬牌序、時空簽章與句子將會自動帶入。
             </p>
 
             <button
@@ -715,11 +776,32 @@ const TShirtView = ({ data, onBack }) => {
               fontSize: "24px",
               letterSpacing: "0.3em",
               color: "#888888",
-              marginBottom: "160px"
+              marginBottom: "100px"
             }}
           >
             SPACE-TIME SIGNATURE
           </p>
+
+          {deckRows.length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                marginBottom: "120px",
+                fontFamily: "monospace",
+                fontSize: "24px",
+                letterSpacing: "0.12em",
+                lineHeight: "1.8",
+                color: "#BBBBBB",
+                textAlign: "center"
+              }}
+            >
+              {deckRows.map((row, index) => (
+                <p key={`factory-row-${index}`} style={{ margin: 0 }}>
+                  {row.join(" ")}
+                </p>
+              ))}
+            </div>
+          )}
 
           <p
             style={{
@@ -734,7 +816,7 @@ const TShirtView = ({ data, onBack }) => {
 
           <p
             style={{
-              fontSize: "110px",
+              fontSize: "100px",
               fontWeight: 300,
               letterSpacing: "0.1em",
               color: "#FFFFFF",
@@ -752,33 +834,41 @@ const TShirtView = ({ data, onBack }) => {
 
 export default function App() {
   const [step, setStep] = useState("home");
+  const [articleId, setArticleId] = useState(null);
   const [momentData, setMomentData] = useState(null);
+
+  const openArticle = (id) => {
+    setArticleId(id);
+    setStep("article");
+  };
+
+  const startLooking = () => {
+    setStep("look");
+  };
+
+  const backHome = () => {
+    setArticleId(null);
+    setStep("home");
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white selection:text-black">
       <AnimatePresence mode="wait">
         {step === "home" && (
           <HomeView
-            onStart={() => setStep("look")}
-            onAbout={() => setStep("about")}
-            onLook={() => setStep("lookArticle")}
-            onSolitude={() => setStep("solitude")}
+            onStart={startLooking}
+            onAbout={() => openArticle("about")}
+            onLookArticle={() => openArticle("look")}
+            onSolitude={() => openArticle("solitude")}
           />
         )}
 
-        {step === "about" && (
-          <AboutView onBack={() => setStep("home")} onStart={() => setStep("look")} />
-        )}
-
-        {step === "lookArticle" && (
-          <LookArticleView
-            onBack={() => setStep("home")}
-            onStart={() => setStep("look")}
+        {step === "article" && articleId && ARTICLES[articleId] && (
+          <ArticleView
+            article={ARTICLES[articleId]}
+            onBack={backHome}
+            onStart={startLooking}
           />
-        )}
-
-        {step === "solitude" && (
-          <SolitudeView onBack={() => setStep("home")} onStart={() => setStep("look")} />
         )}
 
         {step === "look" && (
