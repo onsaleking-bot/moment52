@@ -24,7 +24,11 @@ const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 const BASE_DECK = SUITS.flatMap((suit) => RANKS.map((rank) => `${suit}${rank}`));
 
 const FACTORIAL_SHORT = "8.06 × 10⁶⁷";
-
+const TSHIRT_IMAGES = {
+  blackSet: "/images/tshirt-black-gothic-set.png",
+  blackBack: "/images/tshirt-black-gothic-back.png",
+  creamSet: "/images/tshirt-cream-renaissance-set.png"
+};
 const STORAGE_KEYS = {
   sound: "m52_sound_enabled",
   archive: "m52_look_archive_private"
@@ -487,21 +491,83 @@ function MomentCardPreview({ moment }) {
 }
 
 function ShirtMockup({ moment }) {
-  const text = moment?.text || "窗外的光很安靜";
-  const signature = moment?.signature || "8F3A9C42D16E70B1";
+  const text = moment?.text || "此刻看見";
+  const signature = moment?.signature || "CD1F734769A8DA3A";
 
   return (
-    <div className="mx-auto w-full max-w-[440px]">
-      <div className="relative mx-auto h-[520px] w-full max-w-[360px]">
-        <div className="absolute left-1/2 top-4 h-[86px] w-[116px] -translate-x-1/2 rounded-b-[46px] border border-[#F3F1EA]/20 bg-neutral-950" />
-
-        <div
-          className="absolute left-1/2 top-8 h-[470px] w-[310px] -translate-x-1/2 bg-neutral-950 shadow-2xl"
-          style={{
-            clipPath:
-              "polygon(22% 0%, 78% 0%, 100% 16%, 88% 34%, 83% 28%, 83% 100%, 17% 100%, 17% 28%, 12% 34%, 0% 16%)"
-          }}
+    <div className="mx-auto w-full max-w-[620px]">
+      <div className="relative overflow-hidden border border-neutral-950 bg-[#F3F1EA]">
+        <img
+          src={TSHIRT_IMAGES.blackSet}
+          alt="Look. Archive T-shirt mockup"
+          className="block h-auto w-full object-cover"
         />
+
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="mt-[4%] w-[31%] translate-x-[17%] text-center text-[#F3F1EA]">
+            <div className="text-[0.55rem] tracking-[0.24em]">52!</div>
+
+            <div className="mt-2 text-[0.42rem] tracking-[0.22em] text-[#C8C4B8]">
+              MUSEUM OBJECT
+            </div>
+
+            <div className="mt-7 text-[0.44rem] tracking-[0.22em] text-[#C8C4B8]">
+              LOOK. / TEXT ARCHIVE
+            </div>
+
+            <div className="mt-4 text-[0.95rem] font-medium leading-[1.45]">
+              「{text}」
+            </div>
+
+            <div className="mt-7 break-all font-mono text-[0.38rem] leading-relaxed tracking-[0.06em] text-[#C8C4B8]">
+              SPACE-TIME SIGNATURE
+              <br />#{signature}
+            </div>
+
+            <div className="mt-7 text-[0.34rem] tracking-[0.16em] text-[#8C887F]">
+              THIS MOMENT WILL NEVER HAPPEN AGAIN.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
+          <img
+            src={TSHIRT_IMAGES.blackSet}
+            alt="Black T-shirt set"
+            className="aspect-[4/3] w-full object-cover"
+          />
+          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+            Black / Set
+          </div>
+        </div>
+
+        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
+          <img
+            src={TSHIRT_IMAGES.blackBack}
+            alt="Black T-shirt back"
+            className="aspect-[4/3] w-full object-cover"
+          />
+          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+            Black / Back
+          </div>
+        </div>
+
+        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
+          <img
+            src={TSHIRT_IMAGES.creamSet}
+            alt="Cream T-shirt set"
+            className="aspect-[4/3] w-full object-cover"
+          />
+          <div className="mt-3 text-[0.62rem] tracking-[0.18em] text-neutral-500 uppercase">
+            Cream / Set
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
         <div className="absolute left-1/2 top-[108px] w-[220px] -translate-x-1/2 text-center text-[#F3F1EA]">
           <div className="text-[0.65rem] tracking-[0.22em]">52!</div>
