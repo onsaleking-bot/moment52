@@ -494,14 +494,50 @@ function ShirtMockup({ moment }) {
   const text = moment?.text || "此刻看見";
   const signature = moment?.signature || "CD1F734769A8DA3A";
 
+  const productImages = [
+    {
+      key: "blackSet",
+      label: "Black / Set",
+      src: TSHIRT_IMAGES.blackSet,
+      alt: "Black T-shirt set"
+    },
+    {
+      key: "blackBack",
+      label: "Black / Back",
+      src: TSHIRT_IMAGES.blackBack,
+      alt: "Black T-shirt back"
+    },
+    {
+      key: "creamSet",
+      label: "Cream / Set",
+      src: TSHIRT_IMAGES.creamSet,
+      alt: "Cream T-shirt set"
+    }
+  ];
+
+  const [selectedImage, setSelectedImage] = useState(productImages[0]);
+
   return (
     <div className="mx-auto w-full max-w-[620px]">
       <div className="overflow-hidden border border-neutral-950 bg-[#F3F1EA]">
         <img
-          src={TSHIRT_IMAGES.blackSet}
-          alt="Look. Archive T-shirt mockup"
+          src={selectedImage.src}
+          alt={selectedImage.alt}
           className="block h-auto w-full object-cover"
         />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4 border-b border-neutral-950/15 pb-4">
+        <div>
+          <div className="text-[0.62rem] uppercase tracking-[0.2em] text-neutral-500">
+            Selected View
+          </div>
+          <div className="mt-1 text-sm text-neutral-700">{selectedImage.label}</div>
+        </div>
+
+        <div className="text-right text-[0.62rem] uppercase tracking-[0.2em] text-neutral-500">
+          Click thumbnail to view
+        </div>
       </div>
 
       <div className="mt-5 border border-neutral-950 bg-[#F3F1EA] p-5">
@@ -521,38 +557,32 @@ function ShirtMockup({ moment }) {
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
-          <img
-            src={TSHIRT_IMAGES.blackSet}
-            alt="Black T-shirt set"
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
-            Black / Set
-          </div>
-        </div>
+        {productImages.map((image) => (
+          <button
+            key={image.key}
+            type="button"
+            onClick={() => setSelectedImage(image)}
+            className={`border bg-[#F3F1EA] p-3 text-left transition ${
+              selectedImage.key === image.key
+                ? "border-neutral-950"
+                : "border-neutral-950/20 hover:border-neutral-950/60"
+            }`}
+          >
+            <img
+              src={image.src}
+              alt={image.alt}
+              className="aspect-[4/3] w-full object-cover"
+            />
 
-        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
-          <img
-            src={TSHIRT_IMAGES.blackBack}
-            alt="Black T-shirt back"
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
-            Black / Back
-          </div>
-        </div>
-
-        <div className="border border-neutral-950/20 bg-[#F3F1EA] p-3">
-          <img
-            src={TSHIRT_IMAGES.creamSet}
-            alt="Cream T-shirt set"
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
-            Cream / Set
-          </div>
-        </div>
+            <div
+              className={`mt-3 text-[0.62rem] uppercase tracking-[0.18em] ${
+                selectedImage.key === image.key ? "text-neutral-950" : "text-neutral-500"
+              }`}
+            >
+              {image.label}
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -1458,10 +1488,7 @@ function handleLogoClick() {
                   </div>
 
                   <ShirtMockup moment={moment} />
-
-                  <div className="mt-8 border-t border-neutral-950 pt-5 text-sm leading-[1.9] text-neutral-600">
-                    第一版可先採「填表預購 / 人工確認 / 轉帳後製作」流程。商品頁不要做成一般電商，而要維持 Museum Shop 的館藏延伸物氣質。
-                  </div>
+                
                 </div>
               </div>
             </motion.section>
