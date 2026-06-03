@@ -496,39 +496,27 @@ function ShirtMockup({ moment }) {
 
   return (
     <div className="mx-auto w-full max-w-[620px]">
-      <div className="relative overflow-hidden border border-neutral-950 bg-[#F3F1EA]">
+      <div className="overflow-hidden border border-neutral-950 bg-[#F3F1EA]">
         <img
           src={TSHIRT_IMAGES.blackSet}
           alt="Look. Archive T-shirt mockup"
           className="block h-auto w-full object-cover"
         />
+      </div>
 
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="mt-[4%] w-[31%] translate-x-[17%] text-center text-[#F3F1EA]">
-            <div className="text-[0.55rem] tracking-[0.24em]">52!</div>
+      <div className="mt-5 border border-neutral-950 bg-[#F3F1EA] p-5">
+        <div className="text-[0.65rem] uppercase tracking-[0.24em] text-neutral-500">
+          Look. / Text Archive Preview
+        </div>
 
-            <div className="mt-2 text-[0.42rem] tracking-[0.22em] text-[#C8C4B8]">
-              MUSEUM OBJECT
-            </div>
+        <div className="mt-5 text-2xl font-medium leading-[1.45] tracking-[-0.05em]">
+          「{text}」
+        </div>
 
-            <div className="mt-7 text-[0.44rem] tracking-[0.22em] text-[#C8C4B8]">
-              LOOK. / TEXT ARCHIVE
-            </div>
-
-            <div className="mt-4 text-[0.95rem] font-medium leading-[1.45]">
-              「{text}」
-            </div>
-
-            <div className="mt-7 break-all font-mono text-[0.38rem] leading-relaxed tracking-[0.06em] text-[#C8C4B8]">
-              SPACE-TIME SIGNATURE
-              <br />
-              {"#" + signature}
-            </div>
-
-            <div className="mt-7 text-[0.34rem] tracking-[0.16em] text-[#8C887F]">
-              THIS MOMENT WILL NEVER HAPPEN AGAIN.
-            </div>
-          </div>
+        <div className="mt-5 break-all font-mono text-xs leading-relaxed text-neutral-500">
+          SPACE-TIME SIGNATURE
+          <br />
+          {"#" + signature}
         </div>
       </div>
 
@@ -563,28 +551,6 @@ function ShirtMockup({ moment }) {
           />
           <div className="mt-3 text-[0.62rem] uppercase tracking-[0.18em] text-neutral-500">
             Cream / Set
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-        <div className="absolute left-1/2 top-[108px] w-[220px] -translate-x-1/2 text-center text-[#F3F1EA]">
-          <div className="text-[0.65rem] tracking-[0.22em]">52!</div>
-          <div className="mt-2 text-[0.48rem] tracking-[0.18em] text-[#C8C4B8]">
-            MUSEUM OBJECT
-          </div>
-          <div className="mt-10 text-[0.52rem] tracking-[0.2em] text-[#C8C4B8]">
-            LOOK. / TEXT ARCHIVE
-          </div>
-          <div className="mt-5 text-[1.1rem] leading-[1.55]">「{text}」</div>
-          <div className="mt-12 break-all font-mono text-[0.52rem] leading-relaxed text-[#C8C4B8]">
-            SPACE-TIME SIGNATURE
-            <br />#{signature}
-          </div>
-          <div className="mt-10 text-[0.5rem] tracking-[0.16em] text-[#8C887F]">
-            THIS MOMENT WILL NEVER HAPPEN AGAIN.
           </div>
         </div>
       </div>
