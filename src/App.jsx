@@ -557,7 +557,304 @@ function ShirtMockup({ moment }) {
     </div>
   );
 }
+function FactoryExportModal({ moment, onClose }) {
+  const [form, setForm] = useState(() => ({
+    customerName: "",
+    orderId: "",
+    size: "",
+    color: "黑色",
+    lookText: moment?.text || "",
+    date: moment?.dateLabel || "",
+    time: moment?.timeLabel || "",
+    signature: moment?.signature || "",
+    deck: moment?.deck ? moment.deck.join(" · ") : ""
+  }));
 
+  function updateField(key, value) {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value
+    }));
+  }
+
+  function safeFileName(value) {
+    return String(value || "")
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, "_")
+      .slice(0, 60);
+  }
+
+  function getInkColor() {
+    const color = form.color.toLowerCase();
+    if (color.includes("黑") || color.includes("black")) return "#F3F1EA";
+    return "#171717";
+  }
+
+  function getBaseFileName() {
+    const order = safeFileName(form.orderId) || "ORDER";
+    const name = safeFileName(form.customerName) || "CUSTOMER";
+    const color = safeFileName(form.color) || "COLOR";
+    const size = safeFileName(form.size) || "SIZE";
+    return `${order}_${name}_${color}_${size}`;
+  }
+
+  async function downloadFrontPrint() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 3500;
+    canvas.height = 4500;
+
+    if (!ctx) return;
+
+    const ink = getInkColor();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = ink;
+    ctx.textAlign = "center";
+
+    ctx.font = "500 240px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("52!", 1750, 1850);
+
+    ctx.font = "400 70px Inter, Helvetica, Arial, sans-serif";
+    ctx.letterSpacing = "12px";
+    ctx.fillText("THE MUSEUM OF THE ONLY MOMENT", 1750, 2020);
+
+    ctx.font = "400 58px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("LOOK. / TEXT ARCHIVE", 1750, 2220);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, `${getBaseFileName()}_front-print_3500x4500.png`);
+    }, "image/png");
+  }
+
+  async function downloadBackPrint() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 2500;
+    canvas.height = 2500;
+
+    if (!ctx) return;
+
+    const ink = getInkColor();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = ink;
+    ctx.textAlign = "center";
+
+    ctx.font = "500 120px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("52!", 1250, 230);
+
+    ctx.font = "400 42px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("MUSEUM OBJECT", 1250, 330);
+
+    ctx.font = "400 46px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("LOOK. / TEXT ARCHIVE", 1250, 560);
+
+    ctx.font = "400 54px 'Noto Sans TC', 'PingFang TC', sans-serif";
+    ctx.fillText("此刻我看見", 1250, 720);
+
+    ctx.font = "500 120px 'Noto Sans TC', 'PingFang TC', sans-serif";
+    const lines = splitCanvasText(ctx, `「${form.lookText || "此刻看見"}」`, 1900);
+    lines.slice(0, 4).forEach((line, index) => {
+      ctx.fillText(line, 1250, 930 + index * 150);
+    });
+
+    ctx.font = "400 38px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("SPACE-TIME SIGNATURE", 1250, 1650);
+
+    ctx.font = "400 48px 'IBM Plex Mono', 'Space Mono', monospace";
+    ctx.fillText(`#${form.signature || "UNSIGNED"}`, 1250, 1730);
+
+    ctx.font = "400 34px Inter, Helvetica, Arial, sans-serif";
+    ctx.fillText("THIS MOMENT WILL NEVER HAPPEN AGAIN.", 1250, 2050);
+
+    ctx.font = "400 26px 'IBM Plex Mono', 'Space Mono', monospace";
+    const deckText = form.deck || "52-CARD SEQUENCE";
+    const deckLinesForPrint = splitCanvasText(ctx, deckText, 2100);
+    deckLinesForPrint.slice(0, 3).forEach((line, index) => {
+      ctx.fillText(line, 1250, 2220 + index * 46);
+    });
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, `${getBaseFileName()}_back-print_2500x2500.png`);
+    }, "image/png");
+  }
+
+  function downloadFactoryInfo() {
+    const info = [
+      "52! / LOOK. FACTORY EXPORT",
+      "",
+      `客戶姓名：${form.customerName}`,
+      `訂單編號：${form.orderId}`,
+      `T 恤尺寸：${form.size}`,
+      `T 恤顏色：${form.color}`,
+      "",
+      `Look. 文字：${form.lookText}`,
+      `日期：${form.date}`,
+      `時間：${form.time}`,
+      `Space-Time Signature：#${form.signature}`,
+      "",
+      "52-card sequence:",
+      form.deck
+    ].join("\n");
+
+    const blob = new Blob([info], {
+      type: "text/plain;charset=utf-8"
+    });
+
+    downloadBlob(blob, `${getBaseFileName()}_factory-info.txt`);
+  }
+
+  return (
+    <div className="pr-8">
+      <MuseumTag>Factory Export</MuseumTag>
+
+      <h2 className="mt-5 text-4xl font-medium tracking-[-0.08em]">
+        Print File Generator
+      </h2>
+
+      <p className="mt-5 leading-[1.9] text-neutral-600">
+        這是營運端隱藏工具。可依據使用者的 Look. 文字、Signature 與訂單資料，產生給印刷廠使用的透明背景 PNG 圖檔。
+      </p>
+
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Customer Name
+          </div>
+          <input
+            value={form.customerName}
+            onChange={(event) => updateField("customerName", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+            placeholder="客戶姓名"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Order ID
+          </div>
+          <input
+            value={form.orderId}
+            onChange={(event) => updateField("orderId", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+            placeholder="訂單編號"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Size
+          </div>
+          <input
+            value={form.size}
+            onChange={(event) => updateField("size", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+            placeholder="例如：M / L / XL"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Color
+          </div>
+          <input
+            value={form.color}
+            onChange={(event) => updateField("color", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+            placeholder="黑色 / 米白色"
+          />
+        </label>
+      </div>
+
+      <label className="mt-5 block">
+        <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+          Look. Text
+        </div>
+        <textarea
+          value={form.lookText}
+          onChange={(event) => updateField("lookText", event.target.value)}
+          className="min-h-[110px] w-full resize-none border border-neutral-950 bg-transparent p-3 text-xl leading-[1.6] outline-none focus:bg-[#ECE8DC]"
+          placeholder="此刻我看見..."
+        />
+      </label>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Date
+          </div>
+          <input
+            value={form.date}
+            onChange={(event) => updateField("date", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Time
+          </div>
+          <input
+            value={form.time}
+            onChange={(event) => updateField("time", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+            Signature
+          </div>
+          <input
+            value={form.signature}
+            onChange={(event) => updateField("signature", event.target.value)}
+            className="w-full border border-neutral-950 bg-transparent p-3 outline-none focus:bg-[#ECE8DC]"
+          />
+        </label>
+      </div>
+
+      <label className="mt-5 block">
+        <div className="mb-2 text-[0.65rem] uppercase tracking-[0.22em] text-neutral-500">
+          52-card Sequence
+        </div>
+        <textarea
+          value={form.deck}
+          onChange={(event) => updateField("deck", event.target.value)}
+          className="min-h-[90px] w-full resize-none border border-neutral-950 bg-transparent p-3 font-mono text-xs leading-relaxed outline-none focus:bg-[#ECE8DC]"
+          placeholder="♠A · ♥2 · ..."
+        />
+      </label>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Button onClick={downloadFrontPrint}>
+          <Download size={16} /> Front PNG
+        </Button>
+
+        <Button onClick={downloadBackPrint}>
+          <Download size={16} /> Back PNG
+        </Button>
+
+        <Button variant="secondary" onClick={downloadFactoryInfo}>
+          <Download size={16} /> Order TXT
+        </Button>
+
+        <Button variant="ghost" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+
+      <div className="mt-6 border-t border-neutral-950/15 pt-5 text-sm leading-[1.8] text-neutral-500">
+        黑色衣服會輸出米白色文字；白色或米白色衣服會輸出黑色文字。PNG 為透明背景，可交給印刷廠排版使用。
+      </div>
+    </div>
+  );
+}
 export default function App() {
   const [view, setView] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -571,7 +868,9 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [deckOpen, setDeckOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-
+const [factoryOpen, setFactoryOpen] = useState(false);
+const logoTapCountRef = useRef(0);
+const logoTapTimerRef = useRef(null);
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
@@ -683,7 +982,25 @@ export default function App() {
     setView(target);
     setMenuOpen(false);
   }
+function handleLogoClick() {
+  goTo("home");
 
+  logoTapCountRef.current += 1;
+
+  if (logoTapTimerRef.current) {
+    window.clearTimeout(logoTapTimerRef.current);
+  }
+
+  logoTapTimerRef.current = window.setTimeout(() => {
+    logoTapCountRef.current = 0;
+  }, 1800);
+
+  if (logoTapCountRef.current >= 5) {
+    logoTapCountRef.current = 0;
+    setFactoryOpen(true);
+    showToast("Factory Export 已開啟。");
+  }
+}
   const navItems = [
     ["home", "Museum"],
     ["look", "Look."],
@@ -700,7 +1017,7 @@ export default function App() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
           <button
             className="flex items-baseline gap-3 text-left"
-            onClick={() => goTo("home")}
+            onClick={handleLogoClick}
             aria-label="Go to museum entrance"
           >
             <span className="text-2xl font-medium tracking-[-0.06em]">52!</span>
@@ -1259,7 +1576,16 @@ export default function App() {
           </Modal>
         )}
       </AnimatePresence>
-
+<AnimatePresence>
+  {factoryOpen && (
+    <Modal onClose={() => setFactoryOpen(false)}>
+      <FactoryExportModal
+        moment={moment}
+        onClose={() => setFactoryOpen(false)}
+      />
+    </Modal>
+  )}
+</AnimatePresence>
       <footer className="relative z-10 border-t border-neutral-950/15 px-5 py-8 md:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-[0.65rem] uppercase tracking-[0.18em] text-neutral-500 md:flex-row md:items-center md:justify-between">
           <div>52! / The Museum of the Only Moment</div>
