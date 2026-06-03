@@ -683,6 +683,10 @@ const ArtworkPreview = ({ data, selectedColor }) => {
         <p className="text-neutral-400">
           此刻我看見：「{data.text}」
         </p>
+
+        <p>
+          當下金句：<span className="text-neutral-400">{data.quote}</span>
+        </p>
       </div>
     </div>
   );
@@ -943,6 +947,9 @@ const TShirtView = ({ data, onBack }) => {
 
               <p className="mt-5">Your Moment</p>
               <p className="mt-2 text-neutral-400">「{data.text}」</p>
+
+              <p className="mt-5">當下金句</p>
+              <p className="mt-2 text-neutral-400">{data.quote}</p>
 
               <p className="mt-5">Color</p>
               <p className="mt-2 text-neutral-400">{edition.formValue}</p>
