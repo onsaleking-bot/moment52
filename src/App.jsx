@@ -8,19 +8,19 @@ import { QUOTES } from "./quotes";
 const GOOGLE_FORM_BASE_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfE-sw4nrw64otfKxOqrTo_LV4sWqIsz0I8P58i9RPlrFyucA/viewform";
 
+// 已確認欄位
 const FORM_ENTRY_DECK = "entry.907849226";
 const FORM_ENTRY_SIGNATURE = "entry.1745604772";
 const FORM_ENTRY_TIME = "entry.284034277";
+const FORM_ENTRY_MOMENT_TEXT = "entry.936038985";
 const FORM_ENTRY_QUOTE = "entry.369992627";
+
 const FORM_ENTRY_SIZE = "entry.508788419";
 const FORM_ENTRY_COLOR = "entry.1607852062";
 const FORM_ENTRY_CUSTOM_NOTICE = "entry.1535842643";
 const FORM_ENTRY_PRIVACY_NOTICE = "entry.1560257946";
 
-// 建議之後在 Google Form 新增「此刻我看見」欄位，再把 entry id 填進來。
-// 目前先留空，程式仍可正常運作。
-const FORM_ENTRY_MOMENT_TEXT = "";
-
+// 如果你的 public 資料夾檔名是 tshirt-front.png，請改成 "/tshirt-front.png"
 const TSHIRT_MOCKUP_SRC = "/tshirt-front.png.png";
 
 const FACTORIAL_52 =
@@ -599,32 +599,29 @@ const TShirtView = ({ data, onBack }) => {
     appendFormValue(params, FORM_ENTRY_DECK, deckText);
     appendFormValue(params, FORM_ENTRY_SIGNATURE, data.signature);
     appendFormValue(params, FORM_ENTRY_TIME, `${data.date} ${data.time}`);
-
-    appendFormValue(
-      params,
-      FORM_ENTRY_QUOTE,
-      FORM_ENTRY_MOMENT_TEXT
-        ? data.quote || ""
-        : `${data.quote || ""}\n\n此刻我看見：${data.text}`
-    );
-
     appendFormValue(params, FORM_ENTRY_MOMENT_TEXT, data.text);
+    appendFormValue(params, FORM_ENTRY_QUOTE, data.quote || "");
+
     appendFormValue(params, FORM_ENTRY_SIZE, "M");
     appendFormValue(params, FORM_ENTRY_COLOR, "黑色");
 
     appendFormValue(
       params,
       FORM_ENTRY_CUSTOM_NOTICE,
-      "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序與時空簽章專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。"
+      "我了解本商品屬個人化客製商品，將依本人於網站生成之牌序、時空簽章與此刻文字專屬製作。訂單確認後即進入製作流程，除商品瑕疵、印刷錯誤或寄送錯誤外，恕不接受任意退換貨。若無故拒收導致商品無法再次銷售，營運方得保留請求相關製作與物流成本之權利。"
     );
 
     appendFormValue(
       params,
       FORM_ENTRY_PRIVACY_NOTICE,
-      "本表單所蒐集之姓名、電話、Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
+      "本表單所蒐集之姓名、電話、Line 帳號或 Email 與收件地址，僅用於訂單聯繫、商品製作、物流寄送與售後服務，不作其他用途。"
     );
 
-    window.open(`${GOOGLE_FORM_BASE_URL}?${params.toString()}`, "_blank", "noopener,noreferrer");
+    window.open(
+      `${GOOGLE_FORM_BASE_URL}?${params.toString()}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   const handleFactoryExport = async () => {
@@ -665,28 +662,30 @@ const TShirtView = ({ data, onBack }) => {
               className="absolute inset-0 h-full w-full object-cover opacity-30 grayscale mix-blend-screen"
             />
 
-            <div className="relative z-10 mt-4 flex w-full flex-col items-center p-8 text-center">
-              <p className="mb-8 text-2xl font-bold tracking-[0.3em] text-white/80">
+            <div className="relative z-10 flex w-full flex-col items-center p-8 text-center">
+              <p className="mb-10 text-3xl font-bold tracking-[0.35em] text-white/85">
                 52!
               </p>
 
-              <p className="mb-1 font-mono text-[12px] tracking-widest text-neutral-300 md:text-sm">
+              <p className="mb-2 text-[8px] uppercase tracking-[0.35em] text-neutral-600">
+                Space-Time Signature
+              </p>
+
+              <p className="mb-10 font-mono text-[11px] tracking-widest text-neutral-300 md:text-xs">
                 {data.signature}
               </p>
 
-              <p className="mb-10 font-mono text-[8px] tracking-[0.2em] text-neutral-600 md:text-[10px]">
-                SPACE-TIME SIGNATURE
-              </p>
-
               {deckRows.length > 0 && (
-                <div className="mb-10 w-full max-w-xs space-y-1 font-mono text-[7px] leading-relaxed tracking-wider text-neutral-500 md:text-[8px]">
+                <div className="mb-12 w-full max-w-xs space-y-1 font-mono text-[6px] leading-relaxed tracking-wider text-neutral-500 md:text-[7px]">
                   {deckRows.map((row, index) => (
                     <p key={`mockup-row-${index}`}>{row.join(" ")}</p>
                   ))}
                 </div>
               )}
 
-              <p className="mb-6 text-[10px] tracking-[0.3em] text-neutral-400 md:text-xs">
+              <div className="mb-12 h-px w-32 bg-white/10" />
+
+              <p className="mb-8 text-[9px] tracking-[0.35em] text-neutral-400 md:text-[10px]">
                 THIS MOMENT WILL NEVER HAPPEN AGAIN
               </p>
 
@@ -716,7 +715,7 @@ const TShirtView = ({ data, onBack }) => {
             </div>
 
             <p className="mb-10 text-xs font-light leading-relaxed tracking-wider text-neutral-500">
-              * 點擊預購將前往訂製表單，您的專屬牌序、時空簽章與句子將會自動帶入。
+              * 點擊預購將前往訂製表單，您的專屬牌序、時空簽章、此刻文字與當下金句將會自動帶入。
             </p>
 
             <button
@@ -761,25 +760,25 @@ const TShirtView = ({ data, onBack }) => {
 
           <p
             style={{
-              fontSize: "32px",
-              fontFamily: "monospace",
-              letterSpacing: "0.2em",
-              color: "#FFFFFF",
-              marginBottom: "10px"
+              fontSize: "22px",
+              letterSpacing: "0.35em",
+              color: "#888888",
+              marginBottom: "20px"
             }}
           >
-            {data.signature}
+            SPACE-TIME SIGNATURE
           </p>
 
           <p
             style={{
-              fontSize: "24px",
-              letterSpacing: "0.3em",
-              color: "#888888",
-              marginBottom: "100px"
+              fontSize: "34px",
+              fontFamily: "monospace",
+              letterSpacing: "0.18em",
+              color: "#FFFFFF",
+              marginBottom: "90px"
             }}
           >
-            SPACE-TIME SIGNATURE
+            {data.signature}
           </p>
 
           {deckRows.length > 0 && (
@@ -802,6 +801,15 @@ const TShirtView = ({ data, onBack }) => {
               ))}
             </div>
           )}
+
+          <div
+            style={{
+              width: "240px",
+              height: "1px",
+              backgroundColor: "rgba(255,255,255,0.2)",
+              marginBottom: "80px"
+            }}
+          />
 
           <p
             style={{
